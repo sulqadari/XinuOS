@@ -1,21 +1,27 @@
 #ifndef _H_GET_ITEM
 #define _H_GET_ITEM
 
-#include "xinu.h"
+#include <stdint.h>
 
 /**
- * @brief  Removes a process from the front of a queue.
+ * @brief  Removes a process from the front of a given queue.
+ * This function takes a queue ID as an argument, verifies that the argument
+ * identifies a nonempty list, finds the process at the head of the list,
+ * and cals getItem() function to extract the process from the list.
  * @note   
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
- * @retval QueueEntry.nextNode
+ * @retval QueueEntry.nextNode process that has been successfully extracted
  */
 int32_t getFirst(int16_t queueId);
 
 /**
- * @brief  Removes a process from end of queue
+ * @brief  Removes a process from end of a given queue.
+ * Similarly to getFirst() function this one takes a queue ID as an argument,
+ * validates it, finds the process at the tail of the list and calls getItem()
+ * to extract the process.
  * @note   
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
- * @retval QueueEntry.previousNode
+ * @retval QueueEntry.previousNode process that has been successfully extracted
  */
 int32_t getLast(int16_t queueId);
 

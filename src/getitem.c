@@ -3,20 +3,20 @@
 int32_t getFirst(int16_t queueId)
 {
     int32_t head;
-    if (QTAB_IS_EMPTY(queueId))
+    if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    head = QTAB_QUEUE_HEAD(queueId);
+    head = GET_QUEUE_HEAD(queueId);
     return getItem(queueTable[head].nextNode);
 }
 
 int32_t getLast(int16_t queueId)
 {
     int32_t tail;
-    if (QTAB_IS_EMPTY(queueId))
+    if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    tail = QTAB_QUEUE_TAIL(queueId);
+    tail = GET_QUEUE_TAIL(queueId);
     return getItem(queueTable[tail].previousNode);
 }
 

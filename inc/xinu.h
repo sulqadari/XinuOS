@@ -5,7 +5,9 @@
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <stdint.h>
-#include "queue.h"
 #include "getitem.h"
+#include "queue.h"
+#include "insert.h"
+#include "newqueue.h"
 
 #endif // !_H_XINU
