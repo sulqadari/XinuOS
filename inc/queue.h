@@ -14,29 +14,30 @@
 #include <stdint.h>
 
 /* Default number of queue entries:
- * 1 per process +
- * 2 for ready list + 2 for sleep list +
- * semaphore + semaphore
+ * process +
+ * 2 ready list +
+ * 2 sleep list +
+ * 2 semaphore
  */
-#define QTAB_TOTAL_OF_PROCESSES   (PROCESS_NUMBER + 4 + NSEM + NSEM)        //NQENT (NPROC + 4 + NSEM + NSEM)
+#define QTAB_TOTAL_OF_PROCESSES   (PROCESS_N + (READYLIST + 1) + (SLEEPLIST + 1) + (NSEM + 1))        //NQENT (NPROC + 4 + NSEM + NSEM)
 #define QTAB_EMPTY      (-1)
 #define QTAB_MAX_KEY    0x7FFFFFFF
 #define QTAB_MIN_KEY    0x80000000
 
-typedef struct QueueEntry {
-    int32_t key;
+typedef struct QueueTableEntry {
+    int32_t nodeKey;
     uint16_t nextNode;
     uint16_t previousNode;
-} Entry;
+} Node;
 
 /*
-* Contains QTAB_TOTAL_OF_PROCESSES entries.
-* An important implicit boundary occurs between element PROCESS_NUMBER - 1 and PROCESS_NUMBER.
-* Each element below the boundary corresponds to a process ID,
-* and the elements queueTable[PROCESS_NUMBER] through queueTable[QTAB_TOTAL_OF_PROCESSES]
-* correspond to the heads or tails of lists.
-*/
-extern Entry queueTable[];
+ * Contains QTAB_TOTAL_OF_PROCESSES entries.
+ * An important implicit boundary occurs between element PROCESS_N - 1 and PROCESS_N.
+ * Each element below the boundary corresponds to a process ID,
+ * and the elements queueTable[PROCESS_N] through queueTable[QTAB_TOTAL_OF_PROCESSES]
+ * correspond to the heads or tails of lists.
+ */
+extern Node queueTable[];
 
 // Queue manipulation functions
 #define GET_QUEUE_HEAD(processId)  (processId)
@@ -46,12 +47,12 @@ extern Entry queueTable[];
 #define GET_LAST_ID(processId)     (queueTable[GET_QUEUE_TAIL(processId)].previousNode)
 
 // Both inline functions check if the given node on a list is a process or the list head/tail.
-// The node is process (not head, nor tail) if its index is less than PROCESS_NUMBER
-#define IS_EMPTY(processId)    (GET_FIRST_ID(processId) >= PROCESS_NUMBER)
-#define NOT_EMPTY(processId)   (GET_FIRST_ID(processId) <  PROCESS_NUMBER)
+// The node is process (not head, nor tail) if its index is less than PROCESS_N
+#define IS_EMPTY(processId)    (GET_FIRST_ID(processId) >= PROCESS_N)
+#define NOT_EMPTY(processId)   (GET_FIRST_ID(processId) <  PROCESS_N)
 
-#define GET_FIRST_KEY(keyId)   (queueTable[GET_FIRST_ID(keyId)].key)
-#define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].key)
+#define GET_FIRST_KEY(keyId)   (queueTable[GET_FIRST_ID(keyId)].nodeKey)
+#define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].nodeKey)
 
 // Inline to check queue ID assumes interrupts are disabled
 #define IS_BAD_QUEUE_ID(queueId)    ( ((int32_t)(queueId) < 0) || (int32_t)(queueId) >= (QTAB_TOTAL_OF_PROCESSES - 1) )
@@ -80,7 +81,7 @@ int32_t remove(int16_t queueId);
  * and cals getItem() function to extract the process from the list.
  * @note   
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
- * @retval QueueEntry.nextNode process that has been successfully extracted
+ * @retval QueueTableEntry.nextNode process that has been successfully extracted
  */
 int32_t getFirst(int16_t queueId);
 
@@ -91,7 +92,7 @@ int32_t getFirst(int16_t queueId);
  * to extract the process.
  * @note   
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
- * @retval QueueEntry.previousNode process that has been successfully extracted
+ * @retval QueueTableEntry.previousNode process that has been successfully extracted
  */
 int32_t getLast(int16_t queueId);
 
@@ -107,9 +108,9 @@ int32_t getLast(int16_t queueId);
 int32_t getItem(int32_t processId);
 
 /**
- * @brief  Inserts a process into a queue in descending key order.
+ * @brief  Inserts a process into a queue in descending nodeKey order.
  * To find the correct location in the list, this method searches for an existing
- * element with a key less than the key of the element being inserted. 
+ * element with a nodeKey less than the nodeKey of the element being inserted. 
  * @note   
  * @param  processId: process to be inserted
  * @param  queueId: a queue on which to insert the process
@@ -117,7 +118,6 @@ int32_t getItem(int32_t processId);
  * @retval status STATUS_OK in case of success.
  */
 uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId);
-
 
 /**
  * @brief  allocates and initializes a queue in the global queue table
