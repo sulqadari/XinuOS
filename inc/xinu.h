@@ -6,5 +6,6 @@
 //#include <stdio.h>
 #include <stdint.h>
 #include "queue.h"
+#include "status.h"
 
 #endif // !_H_XINU
