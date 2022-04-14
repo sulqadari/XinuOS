@@ -4,11 +4,11 @@ int32_t add(int32_t processId, int16_t queueId)
 {
     int16_t tail, previous;
 
-    if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+    // if (IS_BAD_QUEUE_ID(queueId))
+    //     return STATUS_BAD_QUEUE_ID;
     
-    if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
+    // if (IS_BAD_PROCESS_ID(processId))
+    //     return STATUS_BAD_PROCESS_ID;
     
     tail = GET_QUEUE_TAIL(queueId);
     previous = queueTable[tail].previousNode;
@@ -26,8 +26,8 @@ int32_t remove(int16_t queueId)
 {
     int32_t processId;
 
-    if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+    // if (IS_BAD_QUEUE_ID(queueId))
+    //     return STATUS_BAD_QUEUE_ID;
     
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
@@ -65,8 +65,8 @@ int32_t getItem(int32_t processId)
 {
     int32_t previous, next;
 
-    if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
+    // if (IS_BAD_PROCESS_ID(processId))
+    //     return STATUS_BAD_PROCESS_ID;
     
     next = queueTable[processId].nextNode;
     previous = queueTable[processId].previousNode;
@@ -83,11 +83,11 @@ uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId)
     // previous - holds previous node index
     int16_t current, previous;
 
-    if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+    // if (IS_BAD_QUEUE_ID(queueId))
+    //     return STATUS_BAD_QUEUE_ID;
     
-    if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
+    // if (IS_BAD_PROCESS_ID(processId))
+    //     return STATUS_BAD_PROCESS_ID;
     
     current = GET_FIRST_ID(queueId);
 
@@ -109,11 +109,11 @@ uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId)
 
 int16_t newQueue(void)
 {
-    static int16_t nextQueueId = PROCESS_N;
+    static int16_t nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
     int16_t newQueueId = nextQueueId;
 
-    if (newQueueId > QTAB_TOTAL_OF_PROCESSES)
-        return STATUS_QUEUE_TABLE_IS_FULL;
+    // if (newQueueId > QTAB_TOTAL_OF_PROCESSES)
+    //     return STATUS_QUEUE_TABLE_IS_FULL;
     
     nextQueueId += 2;
 

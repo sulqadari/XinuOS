@@ -19,22 +19,23 @@
  * 2 sleep list +
  * 2 semaphore
  */
-#define QTAB_TOTAL_OF_PROCESSES   (PROCESS_N + (READYLIST + 1) + (SLEEPLIST + 1) + (NSEM + 1))        //NQENT (NPROC + 4 + NSEM + NSEM)
+#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + (READYLIST + 1) + (SLEEPLIST + 1) + (NSEM + 1))        //NQENT (NPROC + 4 + NSEM + NSEM)
 #define QTAB_EMPTY      (-1)
 #define QTAB_MAX_KEY    0x7FFFFFFF
 #define QTAB_MIN_KEY    0x80000000
 
-typedef struct QueueTableEntry {
-    int32_t nodeKey;
+typedef struct QueueTableEntry
+{
+    int32_t  nodeKey;
     uint16_t nextNode;
     uint16_t previousNode;
 } Node;
 
 /*
- * Contains QTAB_TOTAL_OF_PROCESSES entries.
- * An important implicit boundary occurs between element PROCESS_N - 1 and PROCESS_N.
+ * Contains QTAB_TOTAL_OF_PROCESSES entries. Represents a doubly linked list data structure.
+ * An important implicit boundary occurs between element MAX_NUM_OF_ACTIVE_PROCESSES - 1 and MAX_NUM_OF_ACTIVE_PROCESSES.
  * Each element below the boundary corresponds to a process ID,
- * and the elements queueTable[PROCESS_N] through queueTable[QTAB_TOTAL_OF_PROCESSES]
+ * and the elements queueTable[MAX_NUM_OF_ACTIVE_PROCESSES] through queueTable[QTAB_TOTAL_OF_PROCESSES]
  * correspond to the heads or tails of lists.
  */
 extern Node queueTable[];
@@ -47,9 +48,9 @@ extern Node queueTable[];
 #define GET_LAST_ID(processId)     (queueTable[GET_QUEUE_TAIL(processId)].previousNode)
 
 // Both inline functions check if the given node on a list is a process or the list head/tail.
-// The node is process (not head, nor tail) if its index is less than PROCESS_N
-#define IS_EMPTY(processId)    (GET_FIRST_ID(processId) >= PROCESS_N)
-#define NOT_EMPTY(processId)   (GET_FIRST_ID(processId) <  PROCESS_N)
+// The node is process (not head, nor tail) if its index is less than MAX_NUM_OF_ACTIVE_PROCESSES
+#define IS_EMPTY(processId)    (GET_FIRST_ID(processId) >= MAX_NUM_OF_ACTIVE_PROCESSES)
+#define NOT_EMPTY(processId)   (GET_FIRST_ID(processId) <  MAX_NUM_OF_ACTIVE_PROCESSES)
 
 #define GET_FIRST_KEY(keyId)   (queueTable[GET_FIRST_ID(keyId)].nodeKey)
 #define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].nodeKey)

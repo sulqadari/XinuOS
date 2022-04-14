@@ -5,6 +5,7 @@
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <stdint.h>
+#include "process.h"    //! process.h file must precede queue.h file 
 #include "queue.h"
 #include "status.h"
 
