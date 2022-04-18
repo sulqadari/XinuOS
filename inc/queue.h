@@ -14,19 +14,19 @@
 #include <stdint.h>
 
 /* Default number of queue entries:
- * process +
+ * 1 per process +
  * 2 ready list +
  * 2 sleep list +
  * 2 semaphore
  */
-#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + (READYLIST + 1) + (SLEEPLIST + 1) + (NSEM + 1))        //NQENT (NPROC + 4 + NSEM + NSEM)
-#define QTAB_EMPTY      (-1)
-#define QTAB_MAX_KEY    0x7FFFFFFF
-#define QTAB_MIN_KEY    0x80000000
+#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + 4 + NSEM + NSEM)        //NQENT (NPROC + 4 + NSEM + NSEM)
+#define QTAB_EMPTY      0xFFFF
+#define QTAB_MAX_KEY    0x80000000
+#define QTAB_MIN_KEY    0x7FFFFFFF
 
 typedef struct QueueTableEntry
 {
-    int32_t  nodeKey;
+    uint32_t  nodeKey;
     uint16_t nextNode;
     uint16_t previousNode;
 } Node;
@@ -56,7 +56,7 @@ extern Node queueTable[];
 #define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].nodeKey)
 
 // Inline to check queue ID assumes interrupts are disabled
-#define IS_BAD_QUEUE_ID(queueId)    ( ((int32_t)(queueId) < 0) || (int32_t)(queueId) >= (QTAB_TOTAL_OF_PROCESSES - 1) )
+#define IS_BAD_QUEUE_ID(queueId)    ( ((uint32_t)(queueId) < 0) || (uint32_t)(queueId) >= (QTAB_TOTAL_OF_PROCESSES - 1) )
 
 /**
  * @brief  Inserts a process at the tail of a queue
@@ -65,7 +65,7 @@ extern Node queueTable[];
  * @param  queueId: ID of queue to use
  * @retval process ID that has been inserted prior to the tail of a list.
  */
-int32_t add(int32_t processId, int16_t queueId);
+uint32_t add(uint32_t processId, uint16_t queueId);
 
 /**
  * @brief  Removes and returns the first process (after head node) on a list
@@ -73,7 +73,7 @@ int32_t add(int32_t processId, int16_t queueId);
  * @param  queueId: ID queue to use
  * @retval process ID removed from the list. Otherwise QTAB_EMPTY if list is empty 
  */
-int32_t remove(int16_t queueId);
+uint32_t remove(uint16_t queueId);
 
 /**
  * @brief  Removes a process from the front of a given queue.
@@ -84,7 +84,7 @@ int32_t remove(int16_t queueId);
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
  * @retval QueueTableEntry.nextNode process that has been successfully extracted
  */
-int32_t getFirst(int16_t queueId);
+uint32_t getFirst(uint16_t queueId);
 
 /**
  * @brief  Removes a process from end of a given queue.
@@ -95,7 +95,7 @@ int32_t getFirst(int16_t queueId);
  * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
  * @retval QueueTableEntry.previousNode process that has been successfully extracted
  */
-int32_t getLast(int16_t queueId);
+uint32_t getLast(uint16_t queueId);
 
 /**
  * @brief  Removes a process from an arbirary point in a queue.
@@ -106,7 +106,7 @@ int32_t getLast(int16_t queueId);
  * @param  processId: ID of process to remove
  * @retval ID of removed process
  */
-int32_t getItem(int32_t processId);
+uint32_t getItem(uint32_t processId);
 
 /**
  * @brief  Inserts a process into a queue in descending nodeKey order.
@@ -118,13 +118,13 @@ int32_t getItem(int32_t processId);
  * @param  keyId: an integer priority for the process
  * @retval status STATUS_OK in case of success.
  */
-uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId);
+uint16_t insert(uint32_t processId, uint16_t queueId, uint32_t keyId);
 
 /**
  * @brief  allocates and initializes a queue in the global queue table
  * @note   
  * @retval ID of allocated queue
  */
-int16_t newQueue(void);
+uint16_t newQueue(void);
 
 #endif // !_H_QUEUE_TABLE

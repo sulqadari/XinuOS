@@ -9,5 +9,6 @@
 #include "process.h"    //! process.h file must precede queue.h file 
 #include "queue.h"
 #include "status.h"
+#include "scheduler.h"
 
 #endif // !_H_XINU

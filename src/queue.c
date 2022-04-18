@@ -1,8 +1,8 @@
 #include "../inc/xinu.h"
 
-int32_t add(int32_t processId, int16_t queueId)
+uint32_t add(uint32_t processId, uint16_t queueId)
 {
-    int16_t tail, previous;
+    uint16_t tail, previous;
 
     if (IS_BAD_QUEUE_ID(queueId))
         return STATUS_BAD_QUEUE_ID;
@@ -22,9 +22,9 @@ int32_t add(int32_t processId, int16_t queueId)
     return processId;
 }
 
-int32_t remove(int16_t queueId)
+uint32_t remove(uint16_t queueId)
 {
-    int32_t processId;
+    uint32_t processId;
 
     if (IS_BAD_QUEUE_ID(queueId))
         return STATUS_BAD_QUEUE_ID;
@@ -39,9 +39,9 @@ int32_t remove(int16_t queueId)
     return processId;
 }
 
-int32_t getFirst(int16_t queueId)
+uint32_t getFirst(uint16_t queueId)
 {
-    int32_t head;
+    uint32_t head;
 
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
@@ -50,9 +50,9 @@ int32_t getFirst(int16_t queueId)
     return getItem(queueTable[head].nextNode);
 }
 
-int32_t getLast(int16_t queueId)
+uint32_t getLast(uint16_t queueId)
 {
-    int32_t tail;
+    uint32_t tail;
 
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
@@ -61,9 +61,9 @@ int32_t getLast(int16_t queueId)
     return getItem(queueTable[tail].previousNode);
 }
 
-int32_t getItem(int32_t processId)
+uint32_t getItem(uint32_t processId)
 {
-    int32_t previous, next;
+    uint32_t previous, next;
 
     if (IS_BAD_PROCESS_ID(processId))
         return STATUS_BAD_PROCESS_ID;
@@ -77,11 +77,11 @@ int32_t getItem(int32_t processId)
     return processId;
 }
 
-uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId)
+uint16_t insert(uint32_t processId, uint16_t queueId, uint32_t keyId)
 {
     // current - runs through items in a queue
     // previous - holds previous node index
-    int16_t current, previous;
+    uint16_t current, previous;
 
     if (IS_BAD_QUEUE_ID(queueId))
         return STATUS_BAD_QUEUE_ID;
@@ -107,10 +107,10 @@ uint16_t insert(int32_t processId, int16_t queueId, int32_t keyId)
     return STATUS_OK;
 }
 
-int16_t newQueue(void)
+uint16_t newQueue(void)
 {
-    static int16_t nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
-    int16_t newQueueId = nextQueueId;
+    static uint16_t nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
+    uint16_t newQueueId = nextQueueId;
 
     if (newQueueId > QTAB_TOTAL_OF_PROCESSES)
         return STATUS_QUEUE_TABLE_IS_FULL;
