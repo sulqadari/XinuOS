@@ -1,6 +1,6 @@
 #include "../inc/xinu.h"
 
-void doRescheduling(void)
+void rescheduleProcess(void)
 {
     Process* currProcess;  // currently running process, whose data stored in processTable is no longer actual.
     Process* nextProcess;
@@ -12,7 +12,7 @@ void doRescheduling(void)
         return;
     }
 
-    // Before current process calls doRescheduling() it may change its own state...
+    // Before current process calls rescheduleProcess() it may change its own state...
     currProcess = &processTable[currentProcessId];
     if (currProcess->state == PROCESS_CURRENT) // ...thus, if process left its state as eligible...
     {
@@ -26,10 +26,10 @@ void doRescheduling(void)
     // As mentioned in '5.6 Implementation of scheduling' current implementation assumes
     // that current process should not appear on the readyList[].
     currentProcessId = remove(readyList);
-    nextProcess = &processTable[currentProcessId];                   // Switch to a process wich has the highest priority
-    nextProcess->state = PROCESS_CURRENT;                            // Mark current process as 'CURRENT'
-    preemption = QUANTUM;                                            // reset time slice for process
-    ctxsw(&currProcess->stackPointer, &nextProcess->stackPointer);   // save hardware registers of the current process.
+    nextProcess = &processTable[currentProcessId];                          // Switch to a process wich has the highest priority
+    nextProcess->state = PROCESS_CURRENT;                                   // Mark current process as 'CURRENT'
+    preemption = QUANTUM;                                                   // reset time slice for process
+    switchContext(&currProcess->stackPointer, &nextProcess->stackPointer);  // save hardware registers of the current process.
 
     return;
 }
@@ -53,10 +53,15 @@ uint16_t isReschedulingAllowed(uint32_t defReq)
             
             --defer.ndefers;
             if ((defer.ndefers == 0) && defer.attempt)
-                doRescheduling();
+                rescheduleProcess();
             
             return STATUS_OK;
         }break;
         default: return STATUS_DEFER_UNKNOWN_CMD_EXC;
     }
+}
+
+void switchContext(uint8_t* currProcStkPtr, uint8_t* nextProcStkPtr)
+{
+
 }

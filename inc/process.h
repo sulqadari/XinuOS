@@ -50,4 +50,18 @@ extern Process processTable[];
                                 || (((uint32_t)(x) >= MAX_NUM_OF_ACTIVE_PROCESSES))\
                                 || (processTable[(x)].state == PROCESS_FREE))
 
+/**
+ * @brief  Makes a process eligible to execute.
+ * Scheduling policy specifies that at any time, the highest priority eligible process must be executing.
+ * Also each OS function should maintain a scheduling invariant: a function assumes that the highest priority
+ * process was executing when the function was called, and must nesure that the highest priority process
+ * is executing when the function returns. Thus if a function changes the state of processes, the function must
+ * call rescheduleProcess() to reestablish the invariant. Thus, when it places a high priority process on the ready
+ * list, this setReadyState() calls rescheduleProcess() to ensure that the policy is followed.
+ * @note   
+ * @param  uint32_t processId: a process to be inserted into readyList
+ * @retval 
+ */
+uint16_t setReadyState(uint32_t processId);
+
 #endif // !_H_PROCESS
