@@ -26,7 +26,7 @@
 
 typedef struct QueueTableEntry
 {
-    uint32_t  nodeKey;
+    uint32_t nodeKey;
     uint16_t nextNode;
     uint16_t previousNode;
 } Node;
@@ -61,8 +61,8 @@ extern Node queueTable[];
 /**
  * @brief  Inserts a process at the tail of a queue
  * @note   
- * @param  processId: ID of process to insert
- * @param  queueId: ID of queue to use
+ * @param  uint32_t processId: ID of process to insert
+ * @param  uint16_t queueId: ID of queue to use
  * @retval process ID that has been inserted prior to the tail of a list.
  */
 uint32_t add(uint32_t processId, uint16_t queueId);
@@ -70,7 +70,7 @@ uint32_t add(uint32_t processId, uint16_t queueId);
 /**
  * @brief  Removes and returns the first process (after head node) on a list
  * @note   
- * @param  queueId: ID queue to use
+ * @param  uint16_t queueId: ID queue to use
  * @retval process ID removed from the list. Otherwise QTAB_EMPTY if list is empty 
  */
 uint32_t remove(uint16_t queueId);
@@ -81,7 +81,7 @@ uint32_t remove(uint16_t queueId);
  * identifies a nonempty list, finds the process at the head of the list,
  * and cals getItem() function to extract the process from the list.
  * @note   
- * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
+ * @param  uint16_t queueId: ID of queue from which to remove a process (assumed valid with no check)
  * @retval QueueTableEntry.nextNode process that has been successfully extracted
  */
 uint32_t getFirst(uint16_t queueId);
@@ -92,7 +92,7 @@ uint32_t getFirst(uint16_t queueId);
  * validates it, finds the process at the tail of the list and calls getItem()
  * to extract the process.
  * @note   
- * @param  queueId: ID of queue from which to remove a process (assumed valid with no check)
+ * @param  uint16_t queueId: ID of queue from which to remove a process (assumed valid with no check)
  * @retval QueueTableEntry.previousNode process that has been successfully extracted
  */
 uint32_t getLast(uint16_t queueId);
@@ -103,7 +103,7 @@ uint32_t getLast(uint16_t queueId);
  * in which the process is currently linked. Extraction consists of making the previous node
  * point to the successor and the successor point to the previous node.
  * @note   
- * @param  processId: ID of process to remove
+ * @param  uint32_t processId: ID of process to remove
  * @retval ID of removed process
  */
 uint32_t getItem(uint32_t processId);
@@ -113,9 +113,9 @@ uint32_t getItem(uint32_t processId);
  * To find the correct location in the list, this method searches for an existing
  * element with a nodeKey less than the nodeKey of the element being inserted. 
  * @note   
- * @param  processId: process to be inserted
- * @param  queueId: a queue on which to insert the process
- * @param  keyId: an integer priority for the process
+ * @param  uint32_t processId: process to be inserted
+ * @param  uint16_t queueId: a queue on which to insert the process
+ * @param  uint32_t keyId: an integer priority for the process
  * @retval status STATUS_OK in case of success.
  */
 uint16_t insert(uint32_t processId, uint16_t queueId, uint32_t keyId);

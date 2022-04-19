@@ -1,9 +1,9 @@
 #include "../inc/xinu.h"
 
-void scheduler (void)
+void doRescheduling(void)
 {
-    Process* oldProcess;  // currently running process, whose data stored in processTable is no longer actual.
-    Process* newProcess;
+    Process* currProcess;  // currently running process, whose data stored in processTable is no longer actual.
+    Process* nextProcess;
 
     // whether rescheduling is deferred?
     if (defer.ndefers > 0)
@@ -12,43 +12,51 @@ void scheduler (void)
         return;
     }
 
-    oldProcess = &processTable[currentProcessId];
-    if (oldProcess->state == PROCESS_CURRENT) // if process remains eligible...
+    // Before current process calls doRescheduling() it may change its own state...
+    currProcess = &processTable[currentProcessId];
+    if (currProcess->state == PROCESS_CURRENT) // ...thus, if process left its state as eligible...
     {
-        if (oldProcess->priority > GET_FIRST_KEY(readyList))        // just return if priority of current process is the biggest one among
-            return;                                                 // those stored in readyList. That means that current process must keep working.
+        if (currProcess->priority > GET_FIRST_KEY(readyList))        // ...just return if priority of current process is the biggest one among
+            return;                                                  // those stored in readyList[]. Which means current process must keep working.
         
-        oldProcess->state = PROCESS_READY;                          // otherwise: process state should be switched from CURRENT ot READY
-        insert(currentProcessId, readyList, oldProcess->priority);  // and inserted at the appropriate index in the readyList
+        currProcess->state = PROCESS_READY;                          // otherwise: process's state should be switched from CURRENT ot READY
+        insert(currentProcessId, readyList, currProcess->priority);  // and process whould be inserted at the appropriate index in the readyList[]
     }
 
-    currentProcessId = remove(readyList);                           // Switch to a process wich has the highest priority
-    newProcess = &processTable[currentProcessId];
-    newProcess->state = PROCESS_CURRENT;
-    preemption = QUANTUM;                                           // reset time slice for process
-    ctxsw(&oldProcess->stackPointer, &newProcess->stackPointer);
+    // As mentioned in '5.6 Implementation of scheduling' current implementation assumes
+    // that current process should not appear on the readyList[].
+    currentProcessId = remove(readyList);
+    nextProcess = &processTable[currentProcessId];                   // Switch to a process wich has the highest priority
+    nextProcess->state = PROCESS_CURRENT;                            // Mark current process as 'CURRENT'
+    preemption = QUANTUM;                                            // reset time slice for process
+    ctxsw(&currProcess->stackPointer, &nextProcess->stackPointer);   // save hardware registers of the current process.
 
     return;
 }
 
-uint16_t isReschedulingAllowed(uint32_t defRequest)
+uint16_t isReschedulingAllowed(uint32_t defReq)
 {
-    switch(defRequest)
+    switch(defReq)
     {
         case DEFER_START: // handle deferral request
-            if (defer.ndefers++ == 0)
+        {
+            defer.ndefers++;
+            if (defer.ndefers == 0)
                 defer.attempt = DEFER_FALSE;
             
             return STATUS_OK;
-
+        }break;
         case DEFER_STOP: // handle end of deferral
+        {
             if (defer.ndefers <= 0)
                 return STATUS_DEFER_HANDLING_EXC;
             
-            if ((--defer.ndefers == 0) && defer.attempt)
-                scheduler();
+            --defer.ndefers;
+            if ((defer.ndefers == 0) && defer.attempt)
+                doRescheduling();
+            
             return STATUS_OK;
-
+        }break;
         default: return STATUS_DEFER_UNKNOWN_CMD_EXC;
     }
 }
