@@ -10,5 +10,6 @@
 #include "queue.h"
 #include "status.h"
 #include "scheduler.h"
+#include "systemcalls.h"
 
 #endif // !_H_XINU

@@ -42,10 +42,10 @@ void rescheduleProcess(void);
  * if rescheduleProcess() was called during the deferral period. If so, rescheduleProcess() is invoked before returning to its caller.
  * 
  * @note   Assumes interrupts are disabled. Called from switchContext() and setReadyState()
- * @param  uint32_t defReq: DEFER_START - to defer rescheduling; DEFER_STOP - to end a deferral period and continue normal execution.
- * @retval STATUS_OK, STATUS_DEFER_HANDLING_EXC or STATUS_DEFER_UNKNOWN_CMD_EXC
+ * @param  int32_t defReq: DEFER_START - to defer rescheduling; DEFER_STOP - to end a deferral period and continue normal execution.
+ * @retval SW_OK, SW_DEFER_HANDLING_EXC or SW_DEFER_UNKNOWN_CMD_EXC
  */
-uint16_t isReschedulingAllowed(uint32_t defReq);
+int16_t isReschedulingAllowed(int32_t defReq);
 
 /**
  * @brief Stores context of current process into its stack:

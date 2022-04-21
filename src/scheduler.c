@@ -34,7 +34,7 @@ void rescheduleProcess(void)
     return;
 }
 
-uint16_t isReschedulingAllowed(uint32_t defReq)
+int16_t isReschedulingAllowed(int32_t defReq)
 {
     switch(defReq)
     {
@@ -44,20 +44,20 @@ uint16_t isReschedulingAllowed(uint32_t defReq)
             if (defer.ndefers == 0)
                 defer.attempt = DEFER_FALSE;
             
-            return STATUS_OK;
+            return SW_OK;
         }break;
         case DEFER_STOP: // handle end of deferral
         {
             if (defer.ndefers <= 0)
-                return STATUS_DEFER_HANDLING_EXC;
+                return SW_DEFER_HANDLING_EXC;
             
             --defer.ndefers;
             if ((defer.ndefers == 0) && defer.attempt)
                 rescheduleProcess();
             
-            return STATUS_OK;
+            return SW_OK;
         }break;
-        default: return STATUS_DEFER_UNKNOWN_CMD_EXC;
+        default: return SW_DEFER_UNKNOWN_CMD_EXC;
     }
 }
 
