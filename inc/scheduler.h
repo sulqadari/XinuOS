@@ -17,12 +17,12 @@
  * Among processes with eual priority scheduling is round-robin.
  * This function is called by running process to give up the processor.
  * 
- * Changing rescheduleProcess() and setReadyState() changes the basic scheduling policy.
+ * Changing reschedule() and set_ready_state() changes the basic scheduling policy.
  * 
  * @note   Assumes interrupts are disabled.
  * @retval None
  */
-void rescheduleProcess(void);
+void reschedule(void);
 
 /**
  * @brief  Temporarily defers scheduling.
@@ -34,33 +34,31 @@ void rescheduleProcess(void);
  * have higher priority.
  * Thus, this function temporarily suspends the scheduling policy.
  * 
- * When deferral is requested the code increments Defer.ndefers variable.
- * Later, when a function ends its deferral period, Defer.ndefers is decremented.
- * As long as count remain positive, rescheduleProcess() only records that a call was made,
+ * When deferral is requested the code increments Defer.defersCounter variable.
+ * Later, when a function ends its deferral period, Defer.defersCounter is decremented.
+ * As long as count remain positive, reschedule() only records that a call was made,
  * but returns to its caller without switching context.
- * When Defer.ndefers reaches zero, this function examines Defer.attempt to see
- * if rescheduleProcess() was called during the deferral period. If so, rescheduleProcess() is invoked before returning to its caller.
+ * When Defer.defersCounter reaches zero, this function examines Defer.attempt to see
+ * if reschedule() was called during the deferral period. If so, reschedule() is invoked before returning to its caller.
  * 
- * @note   Assumes interrupts are disabled. Called from switchContext() and setReadyState()
+ * @note   Assumes interrupts are disabled. Called from hal_switch_context() and set_ready_state()
  * @param  int32_t defReq: DEFER_START - to defer rescheduling; DEFER_STOP - to end a deferral period and continue normal execution.
- * @retval SW_OK, SW_DEFER_HANDLING_EXC or SW_DEFER_UNKNOWN_CMD_EXC
+ * @retval STATUS: SW_OK, SW_DEFER_HANDLING_EXC or SW_DEFER_UNKNOWN_CMD_EXC
  */
-int16_t isReschedulingAllowed(int32_t defReq);
+STATUS reschedule_control(int32_t defReq);
 
 /**
- * @brief Stores context of current process into its stack:
- * 
- * 1. push the contents of the processor registers on the stack;
- * 2. save the currStackPtr in Process.stackPointer;
- * 3. load the nextStackPtr of the 'new' process;
- * 4. reload the processor registers from values previously saved on the stack of 'new' process;
- * 5. return to the function in the new process that called this funtion earlier.
- * 
+ * @brief  Makes a process eligible to execute.
+ * Scheduling policy specifies that at any time, the highest priority eligible process must be executing.
+ * Also each OS function should maintain a scheduling invariant: a function assumes that the highest priority
+ * process was executing when the function was called, and must ensure that the highest priority process
+ * is executing when the function returns. Thus if a function changes the state of processes, the function must
+ * call reschedule() to reestablish the invariant. Thus, when it places a high priority process on the ready
+ * list, this set_ready_state() calls reschedule() to ensure that the policy is followed.
  * @note   
- * @param  uint8_t* currStackPtr: stack pointer of the process which called this function
- * @param  uint8_t* nextStackPtr: stack pointer of new process
- * @retval None
+ * @param  PID32 processId: a process to be inserted into readyList
+ * @retval STATUS: SW_OK or SW_BAD_PROCESS_ID
  */
-void switchContext(uint8_t* currStackPtr, uint8_t* nextStackPtr);
+STATUS set_ready_state(PID32 processId);
 
 #endif // !_H_SCHEDULER

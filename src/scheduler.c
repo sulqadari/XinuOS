@@ -1,18 +1,18 @@
 #include "../inc/xinu.h"
 
-void rescheduleProcess(void)
+void reschedule(void)
 {
     Process* currProcess;  // currently running process, whose data stored in processTable is no longer actual.
     Process* nextProcess;
 
     // whether rescheduling is deferred?
-    if (defer.ndefers > 0)
+    if (defer.defersCounter > 0)
     {
         defer.attempt = DEFER_TRUE; // If so, set attempt variable to TRUE and return to caller function
         return;
     }
 
-    // Before current process calls rescheduleProcess() it may change its own state...
+    // Before current process calls reschedule() it may change its own state...
     currProcess = &processTable[currentProcessId];
     if (currProcess->state == PROCESS_CURRENT) // ...thus, if process left its state as eligible...
     {
@@ -29,31 +29,31 @@ void rescheduleProcess(void)
     nextProcess = &processTable[currentProcessId];                          // Switch to a process wich has the highest priority
     nextProcess->state = PROCESS_CURRENT;                                   // Mark current process as 'CURRENT'
     preemption = QUANTUM;                                                   // reset time slice for process
-    switchContext(&currProcess->stackPointer, &nextProcess->stackPointer);  // save hardware registers of the current process.
+    hal_switch_context(currProcess->stackPointer, nextProcess->stackPointer);  // save hardware registers of the current process.
 
     return;
 }
 
-int16_t isReschedulingAllowed(int32_t defReq)
+STATUS reschedule_control(int32_t defReq)
 {
     switch(defReq)
     {
         case DEFER_START: // handle deferral request
         {
-            defer.ndefers++;
-            if (defer.ndefers == 0)
+            defer.defersCounter++;
+            if (defer.defersCounter == 0)
                 defer.attempt = DEFER_FALSE;
             
             return SW_OK;
         }break;
         case DEFER_STOP: // handle end of deferral
         {
-            if (defer.ndefers <= 0)
+            if (defer.defersCounter <= 0)
                 return SW_DEFER_HANDLING_EXC;
             
-            --defer.ndefers;
-            if ((defer.ndefers == 0) && defer.attempt)
-                rescheduleProcess();
+            --defer.defersCounter;
+            if ((defer.defersCounter == 0) && defer.attempt)
+                reschedule();
             
             return SW_OK;
         }break;
@@ -61,7 +61,18 @@ int16_t isReschedulingAllowed(int32_t defReq)
     }
 }
 
-void switchContext(uint8_t* currProcStkPtr, uint8_t* nextProcStkPtr)
+STATUS set_ready_state(PID32 processId)
 {
+    Process* p_process;
 
+    if (IS_BAD_PROCESS_ID(processId))
+        return SW_BAD_PROCESS_ID;
+
+    p_process = &processTable[processId];
+    p_process->state = PROCESS_READY;
+
+    insert(processId, readyList, p_process->priority);
+    reschedule();
+
+    return SW_OK;
 }
