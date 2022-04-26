@@ -5,7 +5,9 @@
 
 /* Project specific data types */
 #define TRUE    1
-@define FALSE   0
+#define FALSE   0
+#define CONSOLE 1
+
 #define PID32   int32_t     //Process ID
 #define QID16   int16_t     //Queue ID
 #define KID32   int32_t     //Key ID

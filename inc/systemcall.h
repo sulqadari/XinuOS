@@ -66,6 +66,20 @@ STATUS kill(PID32 processId);
 PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs);
 
 /**
+ * @brief  returns process ID available for allocation of the new process
+ * @note   
+ * @retval PID32 or SW_FAILED_TO_ALLOCATE_PROCESS_ID
+ */
+PID32 get_new_process_id(void);
+
+/**
+ * @brief  
+ * @note   
+ * @retval None
+ */
+void returnAddress(void);
+
+/**
  * @brief  Prints system completion message as last process exits.
  * In some systems, this function powers down the device, in other - restarts. In current implementation
  * this function prints message and halts processor.

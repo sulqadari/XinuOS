@@ -164,13 +164,74 @@ PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* na
     }while((i < PROCESS_NAME_LENGTH) && (name[i++] != PROCESS_NAME_NULL_CHAR));
 
     p_process->semaphoreId = -1;
-    p_process->parentProcessId = (PID32)get_pid();
+    p_process->parentProcessId = (PID32)get_process_id();
     p_process->hasMessage = FALSE;
 
     // set up stdin, stdout and stderr descriptors for the shell
     p_process->deviceDescriptors[0] = CONSOLE;
     p_process->deviceDescriptors[1] = CONSOLE;
     p_process->deviceDescriptors[2] = CONSOLE;
+
+    // Initialize stack as if the process was called
+    *saddr = STACK_MAGIC;
+    savsp = (uint32_t) saddr;
+
+    // Push arguments
+    a = (uint32_t*) (&nargs + 1);   // start of args
+    a += (nargs - 1);               // last argument
+
+    for (; nargs > 0; --nargs)      // machine dependent; copy args..
+        *--saddr = *a--;            // ..onto created process's stack
+    *--saddr = (long) PROCESS_INIT_RETURN;
+
+    /* The following entries on the stack must match what hal_switch_context()
+    * expects a saved process state to contain: ret address, ebp, interrupt mask, flags,
+    * registers and an old SP (stack pointer)
+    */
+    
+    /*Make the stack look like it's half-way through a call to hal_switch_context()
+    * that returns to the new process*/
+    *--saddr = (int32_t)funcAddress;
+    *--saddr = savsp;               // This will be register ebp for process exit
+    savsp = (uint32_t) saddr;       // start of frame from hal_switch_context()
+    *--saddr = 0x00000200;          // New process runs with interrupts enabled
+    *--saddr = 0;                   // eax
+    *--saddr = 0;                   // ecx
+    *--saddr = 0;                   // edx
+    *--saddr = 0;                   // ebx
+    *--saddr = 0;                   // esp; value filled in below
+    pushsp = saddr;                 // Remember this location
+    *--saddr = savsp;               // ebp (while finishing hal_switch_context())
+    *--saddr = 0;                   // esi
+    *--saddr = 0;                   // edi
+
+    pushsp = (uint32_t) (p_process->stackPointer = (uint8_t*)saddr);
+    restore_interrupts(mask);
+    return processId;
+
+}
+
+PID32 get_new_process_id(void)
+{
+    uint32_t i;
+    static PID32 nextProcessId = 1;
+
+    for (i = 0; i < QTAB_TOTAL_OF_PROCESSES; ++i)
+    {
+        nextProcessId %= QTAB_TOTAL_OF_PROCESSES;   // wrap around to beginning
+        if (processTable[nextProcessId].state == PROCESS_FREE)
+            return nextProcessId++;
+        else
+            nextProcessId++;
+    }
+
+    return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
+}
+
+void returnAddress(void)
+{
+    PID32 processId = get_process_id();
+    kill(processId);
 }
 
 void xdone(void)
