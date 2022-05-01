@@ -2,6 +2,7 @@
 #define _H_PROCESS
 
 #include <stdint.h>
+#include "globals.h"
 
 #define MAX_NUM_OF_ACTIVE_PROCESSES     8   // Maximum number of processes in the system
 
@@ -23,7 +24,7 @@
 #define PROCESS_STACK_SIZE              0xFFFF          // initial process stack size
 #define PROCESS_MIN_STACK_SIZE          0x1000
 #define PROCESS_INIT_PRIORITY           20              // initial process priority
-#define PROCESS_INIT_RETURN             returnAddress   // an address to which process returns
+#define PROCESS_INIT_RETURN             syscall_return_address   // an address to which process returns
 #define STACK_MAGIC                     0xCAFEBABE      // marker for the top of a process stack (used to help detect overflow)
 
 // Number of device descriptors a process can have open.

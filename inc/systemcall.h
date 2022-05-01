@@ -2,38 +2,38 @@
 #define _H_SYSTEM_CALLS
 
 #include <stdint.h>
+#include "globals.h"
 
 /**
  * @brief  Unsuspends a process, making it ready to run.
- * This method checks consistency of parrams and then calls set_ready_state() function.
+ * This method checks consistency of parrams and then calls scheduler_set_ready_state() function.
  * @note   this method disables interrupt mask to prevent involuntarily relinquishing the processor
  * @param  PID32: processId of process to unsuspend
  * @retval PRIO16: uint16_t priority of a given process which
  *                  have been removed from hibernation. Otherwise:
  *                  SW_BAD_PROCESS_ID or SW_BAD_PROCESS_STATE
  */
-PRIO16 resume(PID32 processId);
+PRIO16 syscall_resume(PID32 processId);
 
 /**
  * @brief  Suspends a process, placing it in hibernation.
  * @note   
  * @param  PID32: processId a process to be suspended
- * @retval uint16_t priority of a given process which have been
- *                  transferred to suspended state. Otherwise:
- *                  SW_BAD_PROCESS_ID or SW_BAD_PROCESS_STATE
+ * @retval uint16_t initial (before this method was called) priority value of a given process which have been
+ *                  transitioned to suspended state. Otherwise: SW_BAD_PROCESS_ID or SW_BAD_PROCESS_STATE
  */
-PRIO16 suspend(PID32 processId);
+PRIO16 syscall_suspend(PID32 processId);
 
 /**
- * @brief Kill a process and remove it from the system.  
- * Unlike suspend(), which saves information about a process, kill() implements process
+ * @brief syscall_kill a process and q_remove it from the system.  
+ * Unlike syscall_suspend(), which saves information about a process, syscall_kill() implements process
  * termination by completely removing a process from the system. Released memory in the process
  * table can be reused by a new process.
  * @note   
  * @param  PID32: 
  * @retval STATUS: 
  */
-STATUS kill(PID32 processId);
+STATUS syscall_kill(PID32 processId);
 
 /**
  * @brief  Creates a new process.
@@ -42,19 +42,19 @@ STATUS kill(PID32 processId);
  * hal_switch_context() can switch to it.
  * This function forms a saved environment on the process's stack as if the specified function
  * had been called. Consequently, we refer to the initial configuration as a pseudo call.
- * To build a pseudo call, create() stores initial values for the registers, including the stack
+ * To build a pseudo call, syscall_create_process() stores initial values for the registers, including the stack
  * pointer and a return address in the pseudo-call on the process's stack. When hal_switch_context()
  * switches to it, the new process begins executing the code for the designated function, obeying the normal
  * calling conventions for accessing arguments and allocating local variables.
  * In short, the intial function for a process behaves exactly as if it had been called.
- * But what value should create() use as a return address in the pseudo-call? The value
+ * But what value should syscall_create_process() use as a return address in the pseudo-call? The value
  * determines what action the system will take if a process returns from its initial
  * (i.e. top-level) function. The paradigm is well-known:
  * If a process returns from the initial (top-level) function in which its execution started,
  * the process exits.
- * To arrange for an exit to occur when the initial call returns, create() assigns the address
- * of function returnAddress as the return address in the pseudo call.
- * Create also fills in the process table entry.
+ * To arrange for an exit to occur when the initial call returns, syscall_create_process() assigns the address
+ * of function syscall_return_address as the return address in the pseudo call.
+ * syscall_create_process also fills in the process table entry.
  * @note   
  * @param  funcAddress: specifies the initial function at which the process should start execution.
  * @param  stackSize: 
@@ -63,21 +63,21 @@ STATUS kill(PID32 processId);
  * @param  nargs: 
  * @retval 
  */
-PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs);
+PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs);
 
 /**
  * @brief  returns process ID available for allocation of the new process
  * @note   
  * @retval PID32 or SW_FAILED_TO_ALLOCATE_PROCESS_ID
  */
-PID32 get_new_process_id(void);
+PID32 syscall_get_new_process_id(void);
 
 /**
  * @brief  
  * @note   
  * @retval None
  */
-void returnAddress(void);
+void syscall_return_address(void);
 
 /**
  * @brief  Prints system completion message as last process exits.
@@ -86,5 +86,5 @@ void returnAddress(void);
  * @note   
  * @retval None
  */
-void xdone(void);
+void syscall_xdone(void);
 #endif // !_H_SYSTEM_CALLS

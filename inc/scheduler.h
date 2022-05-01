@@ -2,6 +2,7 @@
 #define _H_SCHEDULER
 
 #include <stdint.h>
+#include "globals.h"
 
 #define DEFER_TRUE 1
 #define DEFER_FALSE 0
@@ -17,7 +18,7 @@
  * Among processes with eual priority scheduling is round-robin.
  * This function is called by running process to give up the processor.
  * 
- * Changing reschedule() and set_ready_state() changes the basic scheduling policy.
+ * Changing reschedule() and scheduler_set_ready_state() changes the basic scheduling policy.
  * 
  * @note   Assumes interrupts are disabled.
  * @retval None
@@ -41,7 +42,7 @@ void reschedule(void);
  * When Defer.defersCounter reaches zero, this function examines Defer.attempt to see
  * if reschedule() was called during the deferral period. If so, reschedule() is invoked before returning to its caller.
  * 
- * @note   Assumes interrupts are disabled. Called from hal_switch_context() and set_ready_state()
+ * @note   Assumes interrupts are disabled. Called from hal_switch_context() and scheduler_set_ready_state()
  * @param  int32_t defReq: DEFER_START - to defer rescheduling; DEFER_STOP - to end a deferral period and continue normal execution.
  * @retval STATUS: SW_OK, SW_DEFER_HANDLING_EXC or SW_DEFER_UNKNOWN_CMD_EXC
  */
@@ -54,11 +55,11 @@ STATUS reschedule_control(int32_t defReq);
  * process was executing when the function was called, and must ensure that the highest priority process
  * is executing when the function returns. Thus if a function changes the state of processes, the function must
  * call reschedule() to reestablish the invariant. Thus, when it places a high priority process on the ready
- * list, this set_ready_state() calls reschedule() to ensure that the policy is followed.
+ * list, this scheduler_set_ready_state() calls reschedule() to ensure that the policy is followed.
  * @note   
  * @param  PID32 processId: a process to be inserted into readyList
  * @retval STATUS: SW_OK or SW_BAD_PROCESS_ID
  */
-STATUS set_ready_state(PID32 processId);
+STATUS scheduler_set_ready_state(PID32 processId);
 
 #endif // !_H_SCHEDULER

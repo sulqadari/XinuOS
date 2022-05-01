@@ -1,96 +1,95 @@
 #include "../inc/xinu.h"
 
-PRIO16 resume(PID32 processId)
+PRIO16 syscall_resume(PID32 processId)
 {
-    uint32_t intMask;       // stores interrupt mask
+    INTMASK intMask;       // stores interrupt mask
     Process* p_process;
     PRIO16 priority;
 
     /*To prevent involuntarily relinquishing the processor, a system call have to disable
     * interrupts until a change is complete.*/
-    intMask = disable_interrupts();
+    intMask = hal_disable_interrupts();
     if (IS_BAD_PROCESS_ID(processId))
     {
-        restore_interrupts(intMask);
+        hal_restore_interrupts(intMask);
         return SW_BAD_PROCESS_ID;
     }
 
     p_process = &processTable[processId];
     if (PROCESS_SUSPENDED != p_process->state)
     {
-        restore_interrupts(intMask);
+        hal_restore_interrupts(intMask);
         return SW_BAD_PROCESS_STATE;
     }
 
-    // store priority of a given process before calling set_ready_state()
+    // see chapter 6.7 "System call return values SYSERR and OK"
     priority = p_process->priority;
-    set_ready_state(processId);
-    restore_interrupts(intMask);
+    scheduler_set_ready_state(processId);
+    hal_restore_interrupts(intMask);
 
     return priority;
 }
 
-PRIO16 suspend(PID32 processId)
+PRIO16 syscall_suspend(PID32 processId)
 {
-    uint32_t intMask;       // stores interrupt mask
+    INTMASK intMask;       // stores interrupt mask
     Process* p_process;
     PRIO16 priority;      // priority to return
 
-    intMask = disable_interrupts();
+    intMask = hal_disable_interrupts();
     if (IS_BAD_PROCESS_ID(processId) || (PROCESS_NULL == processId))
     {
-        restore_interrupts(intMask);
+        hal_restore_interrupts(intMask);
         return SW_BAD_PROCESS_ID;
     }
 
     p_process = &processTable[processId];
     if ((PROCESS_CURRENT != p_process->state) && (PROCESS_READY != p_process->state))
     {
-        restore_interrupts(intMask);
+        hal_restore_interrupts(intMask);
         return SW_BAD_PROCESS_STATE;
     }
 
     if (PROCESS_READY == p_process->state)      // are we about to suspend a process which is in ready list?
     {
-        get_item(processId);                     // remove a it from the ready list
+        q_get_item(processId);                  // remove a it from the ready list
         p_process->state = PROCESS_SUSPENDED;
     }
-    else    // Otherwise: suspend the current process
+    else    // Otherwise: syscall_suspend the current process
     {
         p_process->state = PROCESS_SUSPENDED;   // mark the current process as suspended
-        reschedule();                    // reschedule processs because we are about to suspend current process.
+        reschedule();                           // reschedule processs because we are about to suspend current process.
     }
 
+    // see chapter 6.10 "The value returned by suspend" for details
     priority = p_process->priority;
-    // after restoring interrupts "p_process->priority" may be changed
-    restore_interrupts(intMask);
-    // thus, return the value stored in local copy
+    hal_restore_interrupts(intMask);
     return priority;
 }
 
-STATUS kill(PID32 processId)
+STATUS syscall_kill(PID32 processId)
 {
-    uint32_t intMask;       // stores interrupt mask
+    INTMASK intMask;       // stores interrupt mask
     Process* p_process;
     int32_t i;
 
-    intMask = disable_interrupts();
+    intMask = hal_disable_interrupts();
     p_process = &processTable[processId];
     if (IS_BAD_PROCESS_ID(processId) || (PROCESS_NULL == processId) || (PROCESS_FREE == p_process->state))
     {
-        restore_interrupts(intMask);
+        hal_restore_interrupts(intMask);
         return SW_BAD_PROCESS_ID;
     }
 
     activeProcessesCounter--;
-    if (1 >= activeProcessesCounter)    // if the current process happens to be the last process..
-        xdone();                        // ..call xdone()
+    if (1 >= activeProcessesCounter)    // if the current process happens to be the last one..
+        syscall_xdone();                        // ..call syscall_xdone()
     
     send(p_process->parentProcessId, processId);
     for(i = 0; i < 3; ++i)
         close(p_process->deviceDescriptors[i]);
     
-    free_stack(p_process->stackBase, p_process->stackLen);
+    hal_free_stack(p_process->stackBase, p_process->stackLen);
 
     switch(p_process->state)
     {
@@ -107,43 +106,43 @@ STATUS kill(PID32 processId)
             semaphoreTable[p_process->semaphoreId].scount++;
         // fall through
         case PROCESS_READY:
-            get_item(processId); //remove from equeue
+            q_get_item(processId); //q_remove from equeue
         // fall through
         default: p_process->state = PROCESS_FREE;
     }
     
-    restore_interrupts(intMask);
+    hal_restore_interrupts(intMask);
     return SW_OK;
 }
 
-PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs)
+PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs)
 {
     uint32_t savsp;
     uint32_t* pushsp;
-    uint32_t intMask;
+    INTMASK intMask;
     PID32 processId;    // stores new process ID
     Process* p_process; // pointer to process table entry
     int8_t i;
     uint32_t* a;        // points to list of args
     uint32_t* saddr;    //stack address
 
-    intMask = disable_interrupts();
+    intMask = hal_disable_interrupts();
     if (stackSize < PROCESS_MIN_STACK_SIZE)
         stackSize = PROCESS_MIN_STACK_SIZE;
     
     stackSize = (uint32_t) round_mb(stackSize);
-    processId = get_new_process_id();
-    saddr = (uint32_t*) get_stack(stackSize);
+    processId = syscall_get_new_process_id();
+    saddr = hal_alloc_stack(stackSize);
 
     if ((priority < 1) || (processId == SW_FAILED_TO_ALLOCATE_PROCESS_ID))
     {
-        restore_interrupts();
+        hal_restore_interrupts();
         return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
     }
 
     if (saddr == (uint32_t*) SW_FAILED_TO_ALLOCATE_STACK)
     {
-        restore_interrupts();
+        hal_restore_interrupts();
         return SW_FAILED_TO_ALLOCATE_STACK;
     }
 
@@ -176,6 +175,10 @@ PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* na
     *saddr = STACK_MAGIC;
     savsp = (uint32_t) saddr;
 
+    // TODO: I expect that the code below
+    // should be moved to this 
+    hal_create_stack_image();
+
     // Push arguments
     a = (uint32_t*) (&nargs + 1);   // start of args
     a += (nargs - 1);               // last argument
@@ -206,12 +209,12 @@ PID32 create(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* na
     *--saddr = 0;                   // edi
 
     pushsp = (uint32_t) (p_process->stackPointer = (uint8_t*)saddr);
-    restore_interrupts(mask);
+    hal_restore_interrupts(intMask);
     return processId;
 
 }
 
-PID32 get_new_process_id(void)
+PID32 syscall_get_new_process_id(void)
 {
     uint32_t i;
     static PID32 nextProcessId = 1;
@@ -228,13 +231,13 @@ PID32 get_new_process_id(void)
     return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
 }
 
-void returnAddress(void)
+void syscall_return_address(void)
 {
     PID32 processId = get_process_id();
-    kill(processId);
+    syscall_kill(processId);
 }
 
-void xdone(void)
+void syscall_xdone(void)
 {
     printf("\n\nAll processses have completed.\n\n");
     hal_halt();

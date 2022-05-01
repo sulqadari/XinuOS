@@ -12,6 +12,7 @@
 #define _H_QUEUE_TABLE
 
 #include <stdint.h>
+#include "globals.h"
 
 /* Default number of queue entries:
  * 1 per process +
@@ -62,23 +63,23 @@ extern Node queueTable[];
  * @brief  Removes a process from the front of a given queue.
  * This function takes a queue ID as an argument, verifies that the argument
  * identifies a nonempty list, finds the process at the head of the list,
- * and cals get_item() function to extract the process from the list.
+ * and cals q_get_item() function to extract the process from the list.
  * @note   
- * @param  QID16 queueId: ID of queue from which to remove a process (assumed valid with no check)
+ * @param  QID16 queueId: ID of queue from which to q_remove a process (assumed valid with no check)
  * @retval PID32 QueueTableEntry.nextNode process that has been successfully extracted
  */
-PID32 get_first(QID16 queueId);
+PID32 q_get_first(QID16 queueId);
 
 /**
  * @brief  Removes a process from end of a given queue.
- * Similarly to get_first() function this one takes a queue ID as an argument,
- * validates it, finds the process at the tail of the list and calls get_item()
+ * Similarly to q_get_first() function this one takes a queue ID as an argument,
+ * validates it, finds the process at the tail of the list and calls q_get_item()
  * to extract the process.
  * @note   
- * @param  QID16 queueId: ID of queue from which to remove a process (assumed valid with no check)
+ * @param  QID16 queueId: ID of queue from which to q_remove a process (assumed valid with no check)
  * @retval PID32 QueueTableEntry.previousNode process that has been successfully extracted
  */
-PID32 get_last(QID16 queueId);
+PID32 q_get_last(QID16 queueId);
 
 /**
  * @brief  Removes a process from an arbirary point in a queue.
@@ -86,19 +87,19 @@ PID32 get_last(QID16 queueId);
  * in which the process is currently linked. Extraction consists of making the previous node
  * point to the successor and the successor point to the previous node.
  * @note   
- * @param  PID32 processId: ID of process to remove
+ * @param  PID32 processId: ID of process to q_remove
  * @retval PID32 ID of removed process
  */
-PID32 get_item(PID32 processId);
+PID32 q_get_item(PID32 processId);
 
 /**
  * @brief  Inserts a process at the tail of a queue
  * @note   
- * @param  PID32 processId: ID of process to insert
+ * @param  PID32 processId: ID of process to q_insert
  * @param  QID16 queueId: ID of queue to use
  * @retval PID32 process ID that has been inserted prior to the tail of a list.
  */
-PID32 add(PID32 processId, QID16 queueId);
+PID32 q_add(PID32 processId, QID16 queueId);
 
 /**
  * @brief  Removes and returns the first process (after head node) on a list
@@ -106,7 +107,7 @@ PID32 add(PID32 processId, QID16 queueId);
  * @param  QID16 queueId: ID queue to use
  * @retval PID32 process ID removed from the list. Otherwise QTAB_EMPTY if list is empty 
  */
-PID32 remove(QID16 queueId);
+PID32 q_remove(QID16 queueId);
 
 /**
  * @brief  Inserts a process into a queue in descending nodeKey order.
@@ -114,17 +115,17 @@ PID32 remove(QID16 queueId);
  * element with a nodeKey less than the nodeKey of the element being inserted. 
  * @note   
  * @param  int32_t processId: process to be inserted
- * @param  int16_t queueId: a queue on which to insert the process
+ * @param  int16_t queueId: a queue on which to q_insert the process
  * @param  int32_t keyId: an integer priority for the process
  * @retval STATUS SW_OK in case of success.
  */
-STATUS insert(PID32 processId, QID16 queueId, KID32 keyId);
+STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId);
 
 /**
  * @brief  allocates and initializes a queue in the global queue table
  * @note   
  * @retval QID16 ID of allocated queue
  */
-QID16 new_queue(void);
+QID16 q_new_queue(void);
 
 #endif // !_H_QUEUE_TABLE

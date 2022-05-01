@@ -1,6 +1,6 @@
 #include "../inc/xinu.h"
 
-PID32 get_first(QID16 queueId)
+PID32 q_get_first(QID16 queueId)
 {
     PID32 head;
 
@@ -8,10 +8,10 @@ PID32 get_first(QID16 queueId)
         return QTAB_EMPTY;
     
     head = GET_QUEUE_HEAD(queueId);
-    return get_item(queueTable[head].nextNode);
+    return q_get_item(queueTable[head].nextNode);
 }
 
-PID32 get_last(QID16 queueId)
+PID32 q_get_last(QID16 queueId)
 {
     PID32 tail;
 
@@ -19,10 +19,10 @@ PID32 get_last(QID16 queueId)
         return QTAB_EMPTY;
     
     tail = GET_QUEUE_TAIL(queueId);
-    return get_item(queueTable[tail].previousNode);
+    return q_get_item(queueTable[tail].previousNode);
 }
 
-PID32 get_item(PID32 processId)
+PID32 q_get_item(PID32 processId)
 {
     PID32 previous, next;
 
@@ -38,7 +38,7 @@ PID32 get_item(PID32 processId)
     return processId;
 }
 
-PID32 add(PID32 processId, QID16 queueId)
+PID32 q_add(PID32 processId, QID16 queueId)
 {
     QID16 tail, previous;
 
@@ -60,7 +60,7 @@ PID32 add(PID32 processId, QID16 queueId)
     return processId;
 }
 
-PID32 remove(QID16 queueId)
+PID32 q_remove(QID16 queueId)
 {
     int32_t processId;
 
@@ -70,14 +70,14 @@ PID32 remove(QID16 queueId)
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    processId = get_first(processId);
+    processId = q_get_first(processId);
     queueTable[processId].previousNode = QTAB_EMPTY;
     queueTable[processId].nextNode = QTAB_EMPTY;
 
     return processId;
 }
 
-STATUS insert(PID32 processId, QID16 queueId, KID32 keyId)
+STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId)
 {
     // current - runs through items in a queue
     // previous - holds previous node index
@@ -107,7 +107,7 @@ STATUS insert(PID32 processId, QID16 queueId, KID32 keyId)
     return SW_OK;
 }
 
-QID16 new_queue(void)
+QID16 q_new_queue(void)
 {
     static QID16 nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
     QID16 newQueueId = nextQueueId;

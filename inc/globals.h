@@ -8,13 +8,15 @@
 #define FALSE   0
 #define CONSOLE 1
 
-#define PID32   int32_t     //Process ID
-#define QID16   int16_t     //Queue ID
-#define KID32   int32_t     //Key ID
-#define SID32   int32_t     //Semaphore ID
-#define PRIO16  int16_t     //Process priority
+#define PID32   int32_t     // Process ID
+#define QID16   int16_t     // Queue ID
+#define KID32   int32_t     // Key ID
+#define SID32   int32_t     // Semaphore ID
+#define PRIO16  int16_t     // Process priority
 #define uMSG32  uint32_t    // Message
-#define STATUS  int16_t     //status
+#define STATUS  int16_t     // status
+#define INTMASK uint32_t    // mask of interruptions
+#define STACK   uint32_t*   // stack size
 
 /**
  * @brief  Global requests counter to defer rescheduling.
