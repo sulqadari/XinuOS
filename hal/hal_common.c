@@ -1,4 +1,4 @@
-#include "hal_stm32f103c8t6.h"
+#include "hal_common.h"
 
 
 void hal_switch_context(uint8_t* currProcStkPtr, uint8_t* nextProcStkPtr)

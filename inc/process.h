@@ -14,18 +14,18 @@
 #define PROCESS_SLEEP                   4   // waiting for timer (sleeping)
 #define PROCESS_SUSPENDED               5   // suspended
 #define PROCESS_WAITING_ON_SEMAPHORE    6   // semaphore queue (waiting for semaphore)
-#define PROCESS_RECEIVING_TMR_OR_MSG       7   // waiting for a timer or a message (whichever occur first)
+#define PROCESS_RECEIVING_TMR_OR_MSG    7   // waiting for a timer or a message (whichever occur first)
 
 #define PROCESS_NAME_LENGTH             16
 #define PROCESS_NAME_NULL_CHAR          '\0'
 #define PROCESS_NULL                    0   // Perhaps this constant is redundant: PROCESS_FREE constant has a similar sense
 
 /* process initialization constants */
-#define PROCESS_STACK_SIZE              0xFFFF          // initial process stack size
+#define PROCESS_STACK_SIZE              0xFFFF                  // initial process stack size
 #define PROCESS_MIN_STACK_SIZE          0x1000
-#define PROCESS_INIT_PRIORITY           20              // initial process priority
-#define PROCESS_INIT_RETURN             syscall_return_address   // an address to which process returns
-#define STACK_MAGIC                     0xCAFEBABE      // marker for the top of a process stack (used to help detect overflow)
+#define PROCESS_INIT_PRIORITY           20                      // initial process priority
+#define PROCESS_INIT_RETURN             syscall_return_address  // an address to which process returns
+#define STACK_MAGIC                     0xCAFEBABE              // marker for the top of a process stack (used to help detect overflow)
 
 // Number of device descriptors a process can have open.
 // Must be odd to make 'Process' 4N bytes (whatever that means...).
@@ -52,5 +52,12 @@ extern Process processTable[];
 #define IS_BAD_PROCESS_ID(x)    (   ((PID32)(x) < 0)\
                                 || (((PID32)(x) >= MAX_NUM_OF_ACTIVE_PROCESSES))\
                                 || (processTable[(x)].state == PROCESS_FREE))
+
+/**
+ * @brief  returns process ID available for allocation of the new process
+ * @note   
+ * @retval PID32 or SW_FAILED_TO_ALLOCATE_PROCESS_ID
+ */
+PID32 proc_alloc_process_id(void);
 
 #endif // !_H_PROCESS

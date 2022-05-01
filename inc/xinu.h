@@ -5,7 +5,7 @@
 //#include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "../hal/hal_stm32f103c8t6.h"
+#include "../hal/hal_common.h"
 #include "globals.h"
 #include "process.h"    //! process.h file must precede queue.h file 
 #include "queue.h"

@@ -38,46 +38,36 @@ STATUS syscall_kill(PID32 processId);
 /**
  * @brief  Creates a new process.
  * In essence, this method builds an image of the process as if it had been stopped while running.
- * Once the image has been constructed and the process has been placed on the ready list, 
- * hal_switch_context() can switch to it.
- * This function forms a saved environment on the process's stack as if the specified function
- * had been called. Consequently, we refer to the initial configuration as a pseudo call.
- * To build a pseudo call, syscall_create_process() stores initial values for the registers, including the stack
- * pointer and a return address in the pseudo-call on the process's stack. When hal_switch_context()
- * switches to it, the new process begins executing the code for the designated function, obeying the normal
- * calling conventions for accessing arguments and allocating local variables.
- * In short, the intial function for a process behaves exactly as if it had been called.
- * But what value should syscall_create_process() use as a return address in the pseudo-call? The value
- * determines what action the system will take if a process returns from its initial
- * (i.e. top-level) function. The paradigm is well-known:
- * If a process returns from the initial (top-level) function in which its execution started,
- * the process exits.
- * To arrange for an exit to occur when the initial call returns, syscall_create_process() assigns the address
- * of function syscall_return_address as the return address in the pseudo call.
+ * To arrange for an exit to occur when the initial call returns, this function assigns the address
+ * of function "syscall_return_address" as the return address in the pseudo call.
  * syscall_create_process also fills in the process table entry.
+ * 
  * @note   
  * @param  funcAddress: specifies the initial function at which the process should start execution.
  * @param  stackSize: 
  * @param  priority: 
  * @param  name: 
  * @param  nargs: 
- * @retval 
+ * @retval PID32: the ID of the newly created process.
  */
 PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs);
 
 /**
- * @brief  returns process ID available for allocation of the new process
- * @note   
- * @retval PID32 or SW_FAILED_TO_ALLOCATE_PROCESS_ID
- */
-PID32 syscall_get_new_process_id(void);
-
-/**
- * @brief  
+ * @brief  Defines an address to which process should return when it terminats.
+ * In fact this address is an entry point to this function which implements logic
+ * intended to terminate process.
  * @note   
  * @retval None
  */
 void syscall_return_address(void);
+
+/**
+ * @brief  TODO: add description
+ * @note   
+ * @param  stackSize: 
+ * @retval 
+ */
+uint32_t syscall_round_mb(uint32_t stackSize);
 
 /**
  * @brief  Prints system completion message as last process exits.
@@ -87,4 +77,29 @@ void syscall_return_address(void);
  * @retval None
  */
 void syscall_xdone(void);
+
+/**
+ * @brief  Returns the scheduling priority of a process
+ * @note   
+ * @param  processId: 
+ * @retval PRIO16: Priority value.
+ */
+PRIO16 syscall_get_process_priority(PID32 processId);
+
+/**
+ * @brief  Returns the ID of the currently executing process
+ * @note   
+ * @retval 
+ */
+PID32 syscall_get_process_id(void);
+
+/**
+ * @brief  Changes the scheduling priority of a process
+ * @note   
+ * @param  processId: 
+ * @param  newPriority: 
+ * @retval PRIO16: previous priority value
+ */
+PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority);
+
 #endif // !_H_SYSTEM_CALLS
