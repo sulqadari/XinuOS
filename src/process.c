@@ -1,17 +1,18 @@
-#include "../inc/xinu.h"
+#include "xinu.h"
 
-uint16_t setReadyState(uint32_t processId)
+PID32 proc_alloc_process_id(void)
 {
-    Process* p_process;
-    
-    if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
-    
-    p_process = &processTable[processId];
-    p_process->state = PROCESS_READY;
+    uint32_t i;
+    static PID32 nextProcessId = 1;
 
-    insert(processId, readyList, p_process->priority);
-    rescheduleProcess();
+    for (i = 0; i < QTAB_TOTAL_OF_PROCESSES; ++i)
+    {
+        nextProcessId %= QTAB_TOTAL_OF_PROCESSES;   // wrap around to beginning
+        if (processTable[nextProcessId].state == PROCESS_FREE)
+            return nextProcessId++;
+        else
+            nextProcessId++;
+    }
 
-    return STATUS_OK;
+    return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
 }

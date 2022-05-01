@@ -1,14 +1,52 @@
 #include "../inc/xinu.h"
 
-uint32_t add(uint32_t processId, uint16_t queueId)
+PID32 q_get_first(QID16 queueId)
 {
-    uint16_t tail, previous;
+    PID32 head;
+
+    if (IS_EMPTY(queueId))
+        return QTAB_EMPTY;
+    
+    head = GET_QUEUE_HEAD(queueId);
+    return q_get_item(queueTable[head].nextNode);
+}
+
+PID32 q_get_last(QID16 queueId)
+{
+    PID32 tail;
+
+    if (IS_EMPTY(queueId))
+        return QTAB_EMPTY;
+    
+    tail = GET_QUEUE_TAIL(queueId);
+    return q_get_item(queueTable[tail].previousNode);
+}
+
+PID32 q_get_item(PID32 processId)
+{
+    PID32 previous, next;
+
+    if (IS_BAD_PROCESS_ID(processId))
+        return SW_BAD_PROCESS_ID;
+    
+    next = queueTable[processId].nextNode;
+    previous = queueTable[processId].previousNode;
+    
+    queueTable[previous].nextNode = next;
+    queueTable[next].previousNode = previous;
+
+    return processId;
+}
+
+PID32 q_add(PID32 processId, QID16 queueId)
+{
+    QID16 tail, previous;
 
     if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+        return SW_BAD_QUEUE_ID;
     
     if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
+        return SW_BAD_PROCESS_ID;
     
     tail = GET_QUEUE_TAIL(queueId);
     previous = queueTable[tail].previousNode;
@@ -22,72 +60,34 @@ uint32_t add(uint32_t processId, uint16_t queueId)
     return processId;
 }
 
-uint32_t remove(uint16_t queueId)
+PID32 q_remove(QID16 queueId)
 {
-    uint32_t processId;
+    int32_t processId;
 
     if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+        return SW_BAD_QUEUE_ID;
     
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    processId = getFirst(processId);
+    processId = q_get_first(processId);
     queueTable[processId].previousNode = QTAB_EMPTY;
     queueTable[processId].nextNode = QTAB_EMPTY;
 
     return processId;
 }
 
-uint32_t getFirst(uint16_t queueId)
-{
-    uint32_t head;
-
-    if (IS_EMPTY(queueId))
-        return QTAB_EMPTY;
-    
-    head = GET_QUEUE_HEAD(queueId);
-    return getItem(queueTable[head].nextNode);
-}
-
-uint32_t getLast(uint16_t queueId)
-{
-    uint32_t tail;
-
-    if (IS_EMPTY(queueId))
-        return QTAB_EMPTY;
-    
-    tail = GET_QUEUE_TAIL(queueId);
-    return getItem(queueTable[tail].previousNode);
-}
-
-uint32_t getItem(uint32_t processId)
-{
-    uint32_t previous, next;
-
-    if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
-    
-    next = queueTable[processId].nextNode;
-    previous = queueTable[processId].previousNode;
-    
-    queueTable[previous].nextNode = next;
-    queueTable[next].previousNode = previous;
-
-    return processId;
-}
-
-uint16_t insert(uint32_t processId, uint16_t queueId, uint32_t keyId)
+STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId)
 {
     // current - runs through items in a queue
     // previous - holds previous node index
-    uint16_t current, previous;
+    QID16 current, previous;
 
     if (IS_BAD_QUEUE_ID(queueId))
-        return STATUS_BAD_QUEUE_ID;
+        return SW_BAD_QUEUE_ID;
     
     if (IS_BAD_PROCESS_ID(processId))
-        return STATUS_BAD_PROCESS_ID;
+        return SW_BAD_PROCESS_ID;
     
     current = GET_FIRST_ID(queueId);
 
@@ -104,16 +104,16 @@ uint16_t insert(uint32_t processId, uint16_t queueId, uint32_t keyId)
     queueTable[previous].nextNode = processId;
     queueTable[current].previousNode = processId;
 
-    return STATUS_OK;
+    return SW_OK;
 }
 
-uint16_t newQueue(void)
+QID16 q_new_queue(void)
 {
-    static uint16_t nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
-    uint16_t newQueueId = nextQueueId;
+    static QID16 nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
+    QID16 newQueueId = nextQueueId;
 
     if (newQueueId > QTAB_TOTAL_OF_PROCESSES)
-        return STATUS_QUEUE_TABLE_IS_FULL;
+        return SW_QUEUE_TABLE_IS_FULL;
     
     nextQueueId += 2;
 
