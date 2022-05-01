@@ -21,16 +21,6 @@ void hal_restore_interrupts(INTMASK intMask)
 
 }
 
-void hal_free_stack(uint8_t* stackBase, uint32_t stackLen)
-{
-
-}
-
-STACK hal_alloc_stack(uint32_t stackSize)
-{
-    return STACK;
-}
-
 void hal_create_stack_image(void)
 {
     

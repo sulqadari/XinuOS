@@ -60,4 +60,12 @@ extern Process processTable[];
  */
 PID32 proc_alloc_process_id(void);
 
+/**
+ * @brief  TODO: requires implementation
+ * @note   
+ * @param  processId: 
+ * @retval None
+ */
+void proc_unsleep(PID32 processId);
+
 #endif // !_H_PROCESS

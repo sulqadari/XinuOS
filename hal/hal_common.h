@@ -43,22 +43,6 @@ INTMASK hal_disable_interrupts(void);
  */
 void hal_restore_interrupts(INTMASK intMask);
 
-/**
- * @brief  Frees memory that has been allocated for the process's stack
- * @note   
- * @param  stackBase: 
- * @param  stackLen: 
- * @retval None
- */
-void hal_free_stack(uint8_t* stackBase, uint32_t stackLen);
-
-/**
- * @brief  Allocates memory in stack area for the new process
- * @note   
- * @param  stackSize: 
- * @retval 
- */
-STACK hal_alloc_stack(uint32_t stackSize);
 
 /**
  * @brief  Creates stack image

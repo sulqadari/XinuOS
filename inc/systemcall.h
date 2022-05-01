@@ -62,14 +62,6 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
 void syscall_return_address(void);
 
 /**
- * @brief  TODO: add description
- * @note   
- * @param  stackSize: 
- * @retval 
- */
-uint32_t syscall_round_mb(uint32_t stackSize);
-
-/**
  * @brief  Prints system completion message as last process exits.
  * In some systems, this function powers down the device, in other - restarts. In current implementation
  * this function prints message and halts processor.
@@ -100,6 +92,6 @@ PID32 syscall_get_process_id(void);
  * @param  newPriority: 
  * @retval PRIO16: previous priority value
  */
-PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority);
+PRIO16 syscall_set_process_priority(PID32 processId, PRIO16 newPriority);
 
 #endif // !_H_SYSTEM_CALLS

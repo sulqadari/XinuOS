@@ -1,6 +1,9 @@
 #ifndef _H_STATUSES
 #define _H_STATUSES
 
+#include <stdint.h>
+
+#define SW                                  uint32_t
 #define SW_OK                               0x0000
 #define SW_BAD_QUEUE_ID                     0x8001
 #define SW_BAD_PROCESS_ID                   0x8002

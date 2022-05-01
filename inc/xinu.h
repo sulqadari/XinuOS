@@ -12,5 +12,8 @@
 #include "status.h"
 #include "scheduler.h"
 #include "systemcall.h"
+#include "message.h"
+#include "device.h"
+#include "ll_memory.h"
 
 #endif // !_H_XINU

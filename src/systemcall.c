@@ -87,9 +87,9 @@ STATUS syscall_kill(PID32 processId)
     
     syscall_send(p_process->parentProcessId, processId);        //!!! TODO: requires implementation
     for(i = 0; i < 3; ++i)
-        syscall_close(p_process->deviceDescriptors[i]);         ///!!! TODO: requires implementation
+        device_close(p_process->deviceDescriptors[i]);         ///!!! TODO: requires implementation
     
-    hal_free_stack(p_process->stackBase, p_process->stackLen);
+    mem_free_stack(p_process->stackBase, p_process->stackLen);
 
     switch(p_process->state)
     {
@@ -130,9 +130,9 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
     if (stackSize < PROCESS_MIN_STACK_SIZE)
         stackSize = PROCESS_MIN_STACK_SIZE;
     
-    stackSize = (uint32_t) syscall_round_mb(stackSize);
+    stackSize = (uint32_t) mem_round_mb(stackSize);
     processId = proc_alloc_process_id();
-    stackAddress = hal_alloc_stack(stackSize);
+    stackAddress = mem_alloc_stack(stackSize);
 
     if ((priority < 1) || (processId == SW_FAILED_TO_ALLOCATE_PROCESS_ID))
     {
@@ -246,12 +246,8 @@ PRIO16 syscall_get_process_priority(PID32 processId)
     return priority;
 }
 
-PID32 syscall_get_process_id(void)
-{
-    return currentProcessId;
-}
+PRIO16 syscall_set_process_priority(PID32 processId, PRIO16 newPriority)
 
-PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority)
 {
     INTMASK intMask;
     Process* p_process;
@@ -270,4 +266,9 @@ PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority)
 
     hal_restore_interrupts(intMask);
     return oldPriority;
+}
+
+PID32 syscall_get_process_id(void)
+{
+    return currentProcessId;
 }
