@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "globals.h"
+#include "semaphore.h"
 
 /* Default number of queue entries:
  * 1 per process +
@@ -20,7 +21,7 @@
  * 2 sleep list +
  * 2 semaphore
  */
-#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + 4 + NSEM + NSEM)        //NQENT (NPROC + 4 + NSEM + NSEM)
+#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + 4 + NUMBER_OF_SEMAPHORES + NUMBER_OF_SEMAPHORES)        //NQENT (NPROC + 4 + NUMBER_OF_SEMAPHORES + NUMBER_OF_SEMAPHORES)
 #define QTAB_EMPTY      (-1)
 #define QTAB_MAX_KEY    0x7FFFFFFF
 #define QTAB_MIN_KEY    0x80000000

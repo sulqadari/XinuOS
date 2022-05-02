@@ -1,4 +1,4 @@
-#include "xinu.h"
+#include "../inc/xinu.h"
 
 PID32 proc_alloc_process_id(void)
 {

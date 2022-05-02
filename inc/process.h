@@ -46,6 +46,7 @@ typedef struct ProcessTableEntry
     uint8_t deviceDescriptors[NUMBER_OF_OPEN_DEVICE_DESCRIPTORS];    // Device descriptors for process
 } Process;
 
+
 extern Process processTable[];
 
 // inline code to check process ID (assumes)

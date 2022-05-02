@@ -103,7 +103,7 @@ STATUS syscall_kill(PID32 processId)
             p_process->state = PROCESS_FREE;
         break;
         case PROCESS_WAITING_ON_SEMAPHORE:
-            semaphoreTable[p_process->semaphoreId].scount++;
+            semaphoreTable[p_process->semaphoreId].count++;
         // fall through
         case PROCESS_READY:
             q_get_item(processId); //q_remove from equeue
@@ -136,13 +136,13 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
 
     if ((priority < 1) || (processId == SW_FAILED_TO_ALLOCATE_PROCESS_ID))
     {
-        hal_restore_interrupts();
+        hal_restore_interrupts(intMask);
         return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
     }
 
     if (stackAddress == (uint32_t*) SW_FAILED_TO_ALLOCATE_STACK)
     {
-        hal_restore_interrupts();
+        hal_restore_interrupts(intMask);
         return SW_FAILED_TO_ALLOCATE_STACK;
     }
 
