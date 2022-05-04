@@ -115,7 +115,7 @@ STATUS syscall_kill(PID32 processId)
     return SW_OK;
 }
 
-PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs)
+PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs, ...)
 {
     uint32_t savsp;
     uint32_t* pushsp;
@@ -123,14 +123,16 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
     PID32 processId;            // stores new process ID
     Process* p_process;         // pointer to process table entry
     int8_t i;
-    uint32_t* a;                // points to list of args
+    uint32_t* p_argsList;       // points to list of args
     uint32_t* stackAddress;    //stack address
 
     intMask = hal_disable_interrupts();
+
     if (stackSize < PROCESS_MIN_STACK_SIZE)
         stackSize = PROCESS_MIN_STACK_SIZE;
     
     stackSize = (uint32_t) mem_round_mb(stackSize);
+    
     processId = proc_alloc_process_id();
     stackAddress = mem_alloc_stack(stackSize);
 
@@ -181,11 +183,11 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
     hal_create_stack_image();
 
     // Push arguments
-    a = (uint32_t*) (&nargs + 1);           // start of args
-    a += (nargs - 1);                       // last argument
+    p_argsList = (uint32_t*) (&nargs + 1);           // start of args
+    p_argsList += (nargs - 1);                       // last argument
 
     for (; nargs > 0; --nargs)              // machine dependent; copy args..
-        *--stackAddress = *a--;             // ..onto created process's stack
+        *--stackAddress = *p_argsList--;             // ..onto created process's stack
     
     *--stackAddress = (long) PROCESS_INIT_RETURN;   // push on return address
 

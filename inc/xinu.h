@@ -15,5 +15,6 @@
 #include "message.h"
 #include "device.h"
 #include "ll_memory.h"
+#include "semaphore.h"
 
 #endif // !_H_XINU
