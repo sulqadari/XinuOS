@@ -52,7 +52,7 @@ SW sem_signal(SID32 semaphoreId)
     }
 
     p_semaphore = &semaphoreTable[semaphoreId];
-    
+
     if (SEMAPHORE_FREE == p_semaphore->state)
     {
         hal_restore_interrupts(intMask);
@@ -77,14 +77,14 @@ SID32 sem_create(int32_t count)
     SID32 semaphoreId;
 
     intMask = hal_disable_interrupts();
-    semaphoreId = sem_get_new_sid();
-
+    
     if (count < 0)
     {
         hal_restore_interrupts(intMask);
-        return SW_BAD_NEGATIVE_SEM_COUNT_VALUE;
+        return SW_NEGATIVE_SEM_COUNT_VALUE;
     }
 
+    semaphoreId = sem_get_new_sid();
     if (SW_FAILED_TO_ALLOCATE_SID == semaphoreId)
     {
         hal_restore_interrupts(intMask);
@@ -164,10 +164,12 @@ SW sem_reset(SID32 semaphoreId, int32_t count)
     QID16 semQueueId;
     PID32 processId;
 
+    intMask = hal_disable_interrupts();
+    
     if (count < 0)
     {
         hal_restore_interrupts(intMask);
-        return SW_BAD_NEGATIVE_SEM_COUNT_VALUE;
+        return SW_NEGATIVE_SEM_COUNT_VALUE;
     }
 
     if (IS_BAD_SEMAPHORE_ID(semaphoreId))
