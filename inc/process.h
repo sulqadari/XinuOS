@@ -46,6 +46,7 @@ typedef struct ProcessTableEntry
     uint8_t deviceDescriptors[NUMBER_OF_OPEN_DEVICE_DESCRIPTORS];    // Device descriptors for process
 } Process;
 
+
 extern Process processTable[];
 
 // inline code to check process ID (assumes)
@@ -59,5 +60,13 @@ extern Process processTable[];
  * @retval PID32 or SW_FAILED_TO_ALLOCATE_PROCESS_ID
  */
 PID32 proc_alloc_process_id(void);
+
+/**
+ * @brief  TODO: requires implementation
+ * @note   
+ * @param  processId: 
+ * @retval None
+ */
+void proc_unsleep(PID32 processId);
 
 #endif // !_H_PROCESS

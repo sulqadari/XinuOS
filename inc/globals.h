@@ -2,6 +2,7 @@
 #define _H_GLOBALS
 
 #include <stdint.h>
+#include "status.h"
 
 /* Project specific data types */
 #define TRUE    1

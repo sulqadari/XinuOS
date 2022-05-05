@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "globals.h"
+#include "semaphore.h"
 
 /* Default number of queue entries:
  * 1 per process +
@@ -20,16 +21,16 @@
  * 2 sleep list +
  * 2 semaphore
  */
-#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + 4 + NSEM + NSEM)        //NQENT (NPROC + 4 + NSEM + NSEM)
+#define QTAB_TOTAL_OF_PROCESSES   (MAX_NUM_OF_ACTIVE_PROCESSES + 4 + NUMBER_OF_SEMAPHORES + NUMBER_OF_SEMAPHORES)        //NQENT (NPROC + 4 + NUMBER_OF_SEMAPHORES + NUMBER_OF_SEMAPHORES)
 #define QTAB_EMPTY      (-1)
 #define QTAB_MAX_KEY    0x7FFFFFFF
 #define QTAB_MIN_KEY    0x80000000
 
 typedef struct QueueTableEntry
 {
-    KID32 nodeKey;
-    QID16 nextNode;
-    QID16 previousNode;
+    KID32 key;
+    QID16 next;
+    QID16 previous;
 } Node;
 
 /*
@@ -45,19 +46,20 @@ extern Node queueTable[];
 #define GET_QUEUE_HEAD(processId)  (processId)
 #define GET_QUEUE_TAIL(processId)  ((processId) + 1)
 
-#define GET_FIRST_ID(processId)    (queueTable[GET_QUEUE_HEAD(processId)].nextNode)
-#define GET_LAST_ID(processId)     (queueTable[GET_QUEUE_TAIL(processId)].previousNode)
+#define GET_FIRST_ID(processId)    (queueTable[GET_QUEUE_HEAD(processId)].next)
+#define GET_LAST_ID(processId)     (queueTable[GET_QUEUE_TAIL(processId)].previous)
 
 // Both inline functions check if the given node on a list is a process or the list head/tail.
 // The node is process (not head, nor tail) if its index is less than MAX_NUM_OF_ACTIVE_PROCESSES
 #define IS_EMPTY(processId)    (GET_FIRST_ID(processId) >= MAX_NUM_OF_ACTIVE_PROCESSES)
 #define NOT_EMPTY(processId)   (GET_FIRST_ID(processId) <  MAX_NUM_OF_ACTIVE_PROCESSES)
 
-#define GET_FIRST_KEY(keyId)   (queueTable[GET_FIRST_ID(keyId)].nodeKey)
-#define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].nodeKey)
+#define GET_FIRST_KEY(keyId)   (queueTable[GET_FIRST_ID(keyId)].key)
+#define GET_LAST_KEY(keyId)    (queueTable[GET_LAST_ID(keyId) ].key)
 
 // Inline to check queue ID. Assumes interrupts are disabled.
-#define IS_BAD_QUEUE_ID(queueId)    ( ((int32_t)(queueId) < 0) || (int32_t)(queueId) >= (QTAB_TOTAL_OF_PROCESSES - 1) )
+#define IS_BAD_QUEUE_ID(queueId)    ( ((int32_t)(queueId) < 0) || \
+                                    (int32_t)(queueId) >= (QTAB_TOTAL_OF_PROCESSES - 1) )
 
 /**
  * @brief  Removes a process from the front of a given queue.
@@ -66,7 +68,7 @@ extern Node queueTable[];
  * and cals q_get_item() function to extract the process from the list.
  * @note   
  * @param  QID16 queueId: ID of queue from which to q_remove a process (assumed valid with no check)
- * @retval PID32 QueueTableEntry.nextNode process that has been successfully extracted
+ * @retval PID32 QueueTableEntry.next process that has been successfully extracted
  */
 PID32 q_get_first(QID16 queueId);
 
@@ -77,7 +79,7 @@ PID32 q_get_first(QID16 queueId);
  * to extract the process.
  * @note   
  * @param  QID16 queueId: ID of queue from which to q_remove a process (assumed valid with no check)
- * @retval PID32 QueueTableEntry.previousNode process that has been successfully extracted
+ * @retval PID32 QueueTableEntry.previous process that has been successfully extracted
  */
 PID32 q_get_last(QID16 queueId);
 
@@ -110,9 +112,9 @@ PID32 q_add(PID32 processId, QID16 queueId);
 PID32 q_remove(QID16 queueId);
 
 /**
- * @brief  Inserts a process into a queue in descending nodeKey order.
+ * @brief  Inserts a process into a queue in descending key order.
  * To find the correct location in the list, this method searches for an existing
- * element with a nodeKey less than the nodeKey of the element being inserted. 
+ * element with a key less than the key of the element being inserted. 
  * @note   
  * @param  int32_t processId: process to be inserted
  * @param  int16_t queueId: a queue on which to q_insert the process

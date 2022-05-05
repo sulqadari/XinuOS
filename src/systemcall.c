@@ -87,9 +87,9 @@ STATUS syscall_kill(PID32 processId)
     
     syscall_send(p_process->parentProcessId, processId);        //!!! TODO: requires implementation
     for(i = 0; i < 3; ++i)
-        syscall_close(p_process->deviceDescriptors[i]);         ///!!! TODO: requires implementation
+        device_close(p_process->deviceDescriptors[i]);         ///!!! TODO: requires implementation
     
-    hal_free_stack(p_process->stackBase, p_process->stackLen);
+    mem_free_stack(p_process->stackBase, p_process->stackLen);
 
     switch(p_process->state)
     {
@@ -103,7 +103,7 @@ STATUS syscall_kill(PID32 processId)
             p_process->state = PROCESS_FREE;
         break;
         case PROCESS_WAITING_ON_SEMAPHORE:
-            semaphoreTable[p_process->semaphoreId].scount++;
+            semaphoreTable[p_process->semaphoreId].count++;
         // fall through
         case PROCESS_READY:
             q_get_item(processId); //q_remove from equeue
@@ -115,7 +115,7 @@ STATUS syscall_kill(PID32 processId)
     return SW_OK;
 }
 
-PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs)
+PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 priority, uint8_t* name, uint32_t nargs, ...)
 {
     uint32_t savsp;
     uint32_t* pushsp;
@@ -123,26 +123,28 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
     PID32 processId;            // stores new process ID
     Process* p_process;         // pointer to process table entry
     int8_t i;
-    uint32_t* a;                // points to list of args
+    uint32_t* p_argsList;       // points to list of args
     uint32_t* stackAddress;    //stack address
 
     intMask = hal_disable_interrupts();
+
     if (stackSize < PROCESS_MIN_STACK_SIZE)
         stackSize = PROCESS_MIN_STACK_SIZE;
     
-    stackSize = (uint32_t) syscall_round_mb(stackSize);
+    stackSize = (uint32_t) mem_round_mb(stackSize);
+    
     processId = proc_alloc_process_id();
-    stackAddress = hal_alloc_stack(stackSize);
+    stackAddress = mem_alloc_stack(stackSize);
 
     if ((priority < 1) || (processId == SW_FAILED_TO_ALLOCATE_PROCESS_ID))
     {
-        hal_restore_interrupts();
+        hal_restore_interrupts(intMask);
         return SW_FAILED_TO_ALLOCATE_PROCESS_ID;
     }
 
     if (stackAddress == (uint32_t*) SW_FAILED_TO_ALLOCATE_STACK)
     {
-        hal_restore_interrupts();
+        hal_restore_interrupts(intMask);
         return SW_FAILED_TO_ALLOCATE_STACK;
     }
 
@@ -181,11 +183,11 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
     hal_create_stack_image();
 
     // Push arguments
-    a = (uint32_t*) (&nargs + 1);           // start of args
-    a += (nargs - 1);                       // last argument
+    p_argsList = (uint32_t*) (&nargs + 1);           // start of args
+    p_argsList += (nargs - 1);                       // last argument
 
     for (; nargs > 0; --nargs)              // machine dependent; copy args..
-        *--stackAddress = *a--;             // ..onto created process's stack
+        *--stackAddress = *p_argsList--;             // ..onto created process's stack
     
     *--stackAddress = (long) PROCESS_INIT_RETURN;   // push on return address
 
@@ -246,12 +248,8 @@ PRIO16 syscall_get_process_priority(PID32 processId)
     return priority;
 }
 
-PID32 syscall_get_process_id(void)
-{
-    return currentProcessId;
-}
+PRIO16 syscall_set_process_priority(PID32 processId, PRIO16 newPriority)
 
-PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority)
 {
     INTMASK intMask;
     Process* p_process;
@@ -270,4 +268,9 @@ PRIO16 syscall_change_priority(PID32 processId, PRIO16 newPriority)
 
     hal_restore_interrupts(intMask);
     return oldPriority;
+}
+
+PID32 syscall_get_process_id(void)
+{
+    return currentProcessId;
 }

@@ -8,7 +8,7 @@ PID32 q_get_first(QID16 queueId)
         return QTAB_EMPTY;
     
     head = GET_QUEUE_HEAD(queueId);
-    return q_get_item(queueTable[head].nextNode);
+    return q_get_item(queueTable[head].next);
 }
 
 PID32 q_get_last(QID16 queueId)
@@ -19,7 +19,7 @@ PID32 q_get_last(QID16 queueId)
         return QTAB_EMPTY;
     
     tail = GET_QUEUE_TAIL(queueId);
-    return q_get_item(queueTable[tail].previousNode);
+    return q_get_item(queueTable[tail].previous);
 }
 
 PID32 q_get_item(PID32 processId)
@@ -29,11 +29,11 @@ PID32 q_get_item(PID32 processId)
     if (IS_BAD_PROCESS_ID(processId))
         return SW_BAD_PROCESS_ID;
     
-    next = queueTable[processId].nextNode;
-    previous = queueTable[processId].previousNode;
+    next = queueTable[processId].next;
+    previous = queueTable[processId].previous;
     
-    queueTable[previous].nextNode = next;
-    queueTable[next].previousNode = previous;
+    queueTable[previous].next = next;
+    queueTable[next].previous = previous;
 
     return processId;
 }
@@ -49,13 +49,13 @@ PID32 q_add(PID32 processId, QID16 queueId)
         return SW_BAD_PROCESS_ID;
     
     tail = GET_QUEUE_TAIL(queueId);
-    previous = queueTable[tail].previousNode;
+    previous = queueTable[tail].previous;
 
-    queueTable[processId].nextNode = tail;
-    queueTable[processId].previousNode = previous;
+    queueTable[processId].next = tail;
+    queueTable[processId].previous = previous;
 
-    queueTable[previous].nextNode = processId;
-    queueTable[tail].previousNode = processId;
+    queueTable[previous].next = processId;
+    queueTable[tail].previous = processId;
 
     return processId;
 }
@@ -71,8 +71,8 @@ PID32 q_remove(QID16 queueId)
         return QTAB_EMPTY;
     
     processId = q_get_first(processId);
-    queueTable[processId].previousNode = QTAB_EMPTY;
-    queueTable[processId].nextNode = QTAB_EMPTY;
+    queueTable[processId].previous = QTAB_EMPTY;
+    queueTable[processId].next = QTAB_EMPTY;
 
     return processId;
 }
@@ -91,18 +91,18 @@ STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId)
     
     current = GET_FIRST_ID(queueId);
 
-    while (queueTable[current].nodeKey >= keyId)
-        current = queueTable[current].nextNode;
+    while (queueTable[current].key >= keyId)
+        current = queueTable[current].next;
     
-    previous = queueTable[current].previousNode;
+    previous = queueTable[current].previous;
     
-    queueTable[processId].nextNode = current;
-    queueTable[processId].previousNode = previous;
+    queueTable[processId].next = current;
+    queueTable[processId].previous = previous;
     
-    queueTable[processId].nodeKey = keyId;
+    queueTable[processId].key = keyId;
     
-    queueTable[previous].nextNode = processId;
-    queueTable[current].previousNode = processId;
+    queueTable[previous].next = processId;
+    queueTable[current].previous = processId;
 
     return SW_OK;
 }
@@ -118,14 +118,14 @@ QID16 q_new_queue(void)
     nextQueueId += 2;
 
     // Initializing header node
-    queueTable[GET_QUEUE_HEAD(newQueueId)].nextNode = GET_QUEUE_TAIL(newQueueId);
-    queueTable[GET_QUEUE_HEAD(newQueueId)].previousNode = QTAB_EMPTY;
-    queueTable[GET_QUEUE_HEAD(newQueueId)].nodeKey = QTAB_MAX_KEY;
+    queueTable[GET_QUEUE_HEAD(newQueueId)].next = GET_QUEUE_TAIL(newQueueId);
+    queueTable[GET_QUEUE_HEAD(newQueueId)].previous = QTAB_EMPTY;
+    queueTable[GET_QUEUE_HEAD(newQueueId)].key = QTAB_MAX_KEY;
 
     // Initializing tail node
-    queueTable[GET_QUEUE_TAIL(newQueueId)].nextNode = QTAB_EMPTY;
-    queueTable[GET_QUEUE_TAIL(newQueueId)].previousNode = GET_QUEUE_HEAD(newQueueId);
-    queueTable[GET_QUEUE_TAIL(newQueueId)].nodeKey = QTAB_MIN_KEY;
+    queueTable[GET_QUEUE_TAIL(newQueueId)].next = QTAB_EMPTY;
+    queueTable[GET_QUEUE_TAIL(newQueueId)].previous = GET_QUEUE_HEAD(newQueueId);
+    queueTable[GET_QUEUE_TAIL(newQueueId)].key = QTAB_MIN_KEY;
 
     return newQueueId;
 }
