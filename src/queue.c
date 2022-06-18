@@ -1,5 +1,7 @@
 #include "../inc/xinu.h"
 
+Node queueTable[QTAB_TOTAL_ENTRIES];
+
 PID32 q_get_first(QID16 queueId)
 {
     PID32 head;
@@ -7,7 +9,7 @@ PID32 q_get_first(QID16 queueId)
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    head = GET_QUEUE_HEAD(queueId);
+    head = queueId;
     return q_get_item(queueTable[head].next);
 }
 
@@ -18,7 +20,7 @@ PID32 q_get_last(QID16 queueId)
     if (IS_EMPTY(queueId))
         return QTAB_EMPTY;
     
-    tail = GET_QUEUE_TAIL(queueId);
+    tail = (queueId + 1);
     return q_get_item(queueTable[tail].previous);
 }
 
@@ -48,7 +50,7 @@ PID32 q_add(PID32 processId, QID16 queueId)
     if (IS_BAD_PROCESS_ID(processId))
         return SW_BAD_PROCESS_ID;
     
-    tail = GET_QUEUE_TAIL(queueId);
+    tail = (queueId + 1);
     previous = queueTable[tail].previous;
 
     queueTable[processId].next = tail;
@@ -77,7 +79,7 @@ PID32 q_remove(QID16 queueId)
     return processId;
 }
 
-STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId)
+SW q_insert(PID32 processId, QID16 queueId, KID32 keyId)
 {
     // current - runs through items in a queue
     // previous - holds previous node index
@@ -109,23 +111,23 @@ STATUS q_insert(PID32 processId, QID16 queueId, KID32 keyId)
 
 QID16 q_new_queue(void)
 {
-    static QID16 nextQueueId = MAX_NUM_OF_ACTIVE_PROCESSES;
+    static QID16 nextQueueId = ACTIVE_PROCESSES;
     QID16 newQueueId = nextQueueId;
 
-    if (newQueueId > QTAB_TOTAL_OF_PROCESSES)
+    if (newQueueId > QTAB_TOTAL_ENTRIES)
         return SW_QUEUE_TABLE_IS_FULL;
     
     nextQueueId += 2;
 
     // Initializing header node
-    queueTable[GET_QUEUE_HEAD(newQueueId)].next = GET_QUEUE_TAIL(newQueueId);
-    queueTable[GET_QUEUE_HEAD(newQueueId)].previous = QTAB_EMPTY;
-    queueTable[GET_QUEUE_HEAD(newQueueId)].key = QTAB_MAX_KEY;
+    queueTable[newQueueId].next = (newQueueId + 1);
+    queueTable[newQueueId].previous = QTAB_EMPTY;
+    queueTable[newQueueId].key = QTAB_MAX_KEY;
 
     // Initializing tail node
-    queueTable[GET_QUEUE_TAIL(newQueueId)].next = QTAB_EMPTY;
-    queueTable[GET_QUEUE_TAIL(newQueueId)].previous = GET_QUEUE_HEAD(newQueueId);
-    queueTable[GET_QUEUE_TAIL(newQueueId)].key = QTAB_MIN_KEY;
+    queueTable[(newQueueId + 1)].next = QTAB_EMPTY;
+    queueTable[(newQueueId + 1)].previous = newQueueId;
+    queueTable[(newQueueId + 1)].key = QTAB_MIN_KEY;
 
     return newQueueId;
 }

@@ -5,37 +5,6 @@
 #include "globals.h"
 
 /**
- * @brief  Unsuspends a process, making it ready to run.
- * This method checks consistency of parrams and then calls scheduler_set_ready_state() function.
- * @note   this method disables interrupt mask to prevent involuntarily relinquishing the processor
- * @param  PID32: processId of process to unsuspend
- * @retval PRIO16: uint16_t priority of a given process which
- *                  have been removed from hibernation. Otherwise:
- *                  SW_BAD_PROCESS_ID or SW_BAD_PROCESS_STATE
- */
-PRIO16 syscall_resume(PID32 processId);
-
-/**
- * @brief  Suspends a process, placing it in hibernation.
- * @note   
- * @param  PID32: processId a process to be suspended
- * @retval uint16_t initial (before this method was called) priority value of a given process which have been
- *                  transitioned to suspended state. Otherwise: SW_BAD_PROCESS_ID or SW_BAD_PROCESS_STATE
- */
-PRIO16 syscall_suspend(PID32 processId);
-
-/**
- * @brief syscall_kill a process and q_remove it from the system.  
- * Unlike syscall_suspend(), which saves information about a process, syscall_kill() implements process
- * termination by completely removing a process from the system. Released memory in the process
- * table can be reused by a new process.
- * @note   
- * @param  PID32: 
- * @retval STATUS: 
- */
-STATUS syscall_kill(PID32 processId);
-
-/**
  * @brief  Creates a new process.
  * In essence, this method builds an image of the process as if it had been stopped while running.
  * To arrange for an exit to occur when the initial call returns, this function assigns the address
@@ -62,13 +31,11 @@ PID32 syscall_create_process(void* funcAddress, uint32_t stackSize, PRIO16 prior
 void syscall_return_address(void);
 
 /**
- * @brief  Prints system completion message as last process exits.
- * In some systems, this function powers down the device, in other - restarts. In current implementation
- * this function prints message and halts processor.
+ * @brief  Returns the ID of the currently executing process
  * @note   
- * @retval None
+ * @retval 
  */
-void syscall_xdone(void);
+PID32 syscall_get_process_id(void);
 
 /**
  * @brief  Returns the scheduling priority of a process
@@ -79,13 +46,6 @@ void syscall_xdone(void);
 PRIO16 syscall_get_process_priority(PID32 processId);
 
 /**
- * @brief  Returns the ID of the currently executing process
- * @note   
- * @retval 
- */
-PID32 syscall_get_process_id(void);
-
-/**
  * @brief  Changes the scheduling priority of a process
  * @note   
  * @param  processId: 
@@ -93,5 +53,30 @@ PID32 syscall_get_process_id(void);
  * @retval PRIO16: previous priority value
  */
 PRIO16 syscall_set_process_priority(PID32 processId, PRIO16 newPriority);
+
+/**
+ * @brief  Passes a message to a process and starts recipient if waiting
+ * @note   see section 8.5
+ * @param  processId: ID of recipient process
+ * @param  msg: contents of message
+ * @retval SW_OK
+ */
+SW syscall_send_msg(PID32 processId, uMSG32 msg);
+
+/**
+ * @brief  Waits for a message and returns it to the caller
+ * @note   
+ * @retval uMSG32
+ */
+uMSG32 syscall_receive_msg(void);
+
+/**
+ * @brief  Non-blocking version of syscall_receive_msg().
+ * It clears incoming message and returns message if one waiting. A process can use this
+ * function to remove an old message before starting an interaction that uses message passing.
+ * @note   
+ * @retval 
+ */
+uMSG32 syscall_nb_receive_msg(void);
 
 #endif // !_H_SYSTEM_CALLS

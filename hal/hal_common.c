@@ -1,11 +1,5 @@
 #include "hal_common.h"
 
-
-void hal_switch_context(uint8_t* currProcStkPtr, uint8_t* nextProcStkPtr)
-{
-
-}
-
 void hal_halt(void)
 {
     

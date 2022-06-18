@@ -1,5 +1,5 @@
-#ifndef _H_STATUSES
-#define _H_STATUSES
+#ifndef _H_STATUS
+#define _H_STATUS
 
 #include <stdint.h>
 
@@ -16,7 +16,8 @@
 #define SW_FAILED_TO_ALLOCATE_PROCESS_ID    0x8009
 #define SW_FAILED_TO_ALLOCATE_STACK         0x800A
 #define SW_FAILED_TO_ALLOCATE_SID           0x800B
-#define SW_NEGATIVE_SEM_COUNT_VALUE     0x800C
+#define SW_NEGATIVE_SEM_COUNT_VALUE         0x800C
+#define SW_PROCESS_OUTSTANDING_MSG_EXC      0x800D
 
 
-#endif // ! _H_STATUSES
+#endif // ! _H_STATUS

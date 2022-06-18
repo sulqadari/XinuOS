@@ -1,28 +1,9 @@
 #ifndef _H_SEMAPHORE
 #define _H_SEMAPHORE
 
-#include <stdint.h>
 #include "globals.h"
 
-#define NUMBER_OF_SEMAPHORES    120 // default number of semaphores
-#define SEMAPHORE_FREE          0   // semaphore table entry is available
-#define SEMAPHORE_USED          1   // semaphore table entry is in use
-
-/**
- * @brief  Semaphore table entry
- * @note   
- * @retval None
- */
-typedef struct SemaphoreTableEntry
-{
-    int8_t state;   // informs whether the entry is currently used (i.e. allocated) or free
-    int32_t count;  // if has a negative value then associated processes are blocked
-    QID16 queueId;  // index of the head of the list of processes that are waiting on the semaphore
-} Semaphore;
-
-extern Semaphore semaphoreTable[];
-
-#define IS_BAD_SEMAPHORE_ID(S) ( ((int32_t)(S) < 0) || ((S) >= NUMBER_OF_SEMAPHORES) )
+#define HAS_BAD_SEMAPHORE_ID(S) ( ((int32_t)(S) < 0) || ((S) >= SEM_TOTAL) )
 
 /**
  * @brief  Causes current process to wait on a semaphore

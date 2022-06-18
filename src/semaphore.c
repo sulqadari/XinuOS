@@ -8,7 +8,7 @@ SW sem_wait(SID32 semaphoreId)
 
     intMask = hal_disable_interrupts();
 
-    if (IS_BAD_SEMAPHORE_ID(semaphoreId))
+    if (HAS_BAD_SEMAPHORE_ID(semaphoreId))
     {
         hal_restore_interrupts(intMask);
         return SW_BAD_SEMAPHORE_ID;
@@ -27,10 +27,10 @@ SW sem_wait(SID32 semaphoreId)
     if (p_semaphore->count < 0) // If semaphore counter is negative..
     {
         p_process = &processTable[currentProcessId];        //..get current process..
-        p_process->state = PROCESS_WAITING_ON_SEMAPHORE;    //..set its state to WAITING..
+        p_process->state = PROCESS_STATE_WAITING_ON_SEMAPHORE;    //..set its state to WAITING..
         p_process->semaphoreId = semaphoreId;               //..record semaphore ID associated with it..
         q_add(currentProcessId, p_semaphore->queueId);      //..and enqueue current process on semaphore list
-        reschedule();                                       //..switch to next process
+        proc_reschedule();                                       //..switch to next process
     }
     
     hal_restore_interrupts(intMask);
@@ -45,7 +45,7 @@ SW sem_signal(SID32 semaphoreId)
 
     intMask = hal_disable_interrupts();
 
-    if (IS_BAD_SEMAPHORE_ID(semaphoreId))
+    if (HAS_BAD_SEMAPHORE_ID(semaphoreId))
     {
         hal_restore_interrupts(intMask);
         return SW_BAD_SEMAPHORE_ID;
@@ -64,7 +64,7 @@ SW sem_signal(SID32 semaphoreId)
     if (p_semaphore->count < 0) // release a waiting process
     {
         processId = q_remove(p_semaphore->queueId);
-        scheduler_set_ready_state(processId);
+        proc_set_ready_state(processId);
     }
 
     hal_restore_interrupts(intMask);
@@ -102,16 +102,16 @@ SID32 sem_get_new_sid(void)
     SID32 semaphoreId;
     int32_t i;
 
-    for (i = 0; i < NUMBER_OF_SEMAPHORES; ++i)
+    for (i = 0; i < SEM_TOTAL; ++i)
     {
         semaphoreId = nextSemaphore++;
         
-        if (nextSemaphore >= NUMBER_OF_SEMAPHORES)
+        if (nextSemaphore >= SEM_TOTAL)
             nextSemaphore = 0;
         
         if (SEMAPHORE_FREE == semaphoreTable[semaphoreId].state)
         {
-            semaphoreTable[semaphoreId].state = SEMAPHORE_USED;
+            semaphoreTable[semaphoreId].state = SEMAPHORE_BUSY;
             return semaphoreId;
         }
     }
@@ -127,7 +127,7 @@ SW sem_delete(SID32 semaphoreId)
 
     intMask = hal_disable_interrupts();
 
-    if (IS_BAD_SEMAPHORE_ID(semaphoreId))
+    if (HAS_BAD_SEMAPHORE_ID(semaphoreId))
     {
         hal_restore_interrupts(intMask);
         return SW_BAD_SEMAPHORE_ID;
@@ -143,16 +143,16 @@ SW sem_delete(SID32 semaphoreId)
 
     p_semaphore->state = SEMAPHORE_FREE;
 
-    reschedule_control(DEFER_START);
+    proc_defer_handler(DEFER_START);
 
     while(p_semaphore->count < 0)
     {
         p_semaphore->count++;
         processId = q_get_first(p_semaphore->queueId);
-        scheduler_set_ready_state(processId);
+        proc_set_ready_state(processId);
     }
 
-    reschedule_control(DEFER_STOP);
+    proc_defer_handler(DEFER_STOP);
     hal_restore_interrupts(intMask);
     return SW_OK;
 }
@@ -172,7 +172,7 @@ SW sem_reset(SID32 semaphoreId, int32_t count)
         return SW_NEGATIVE_SEM_COUNT_VALUE;
     }
 
-    if (IS_BAD_SEMAPHORE_ID(semaphoreId))
+    if (HAS_BAD_SEMAPHORE_ID(semaphoreId))
     {
         hal_restore_interrupts(intMask);
         return SW_BAD_SEMAPHORE_ID;
@@ -187,16 +187,16 @@ SW sem_reset(SID32 semaphoreId, int32_t count)
     p_semaphore = &semaphoreTable[semaphoreId];
     semQueueId = p_semaphore->queueId;  // prepare to free any waiting processes on the queue
 
-    reschedule_control(DEFER_START);
+    proc_defer_handler(DEFER_START);
 
     while((processId = q_get_first(semQueueId)) != QTAB_EMPTY)
     {
-        scheduler_set_ready_state(processId);
+        proc_set_ready_state(processId);
     }
 
     p_semaphore->count = count; // reset count as specified
 
-    reschedule_control(DEFER_STOP);
+    proc_defer_handler(DEFER_STOP);
     hal_restore_interrupts(intMask);
     return SW_OK;
 }
